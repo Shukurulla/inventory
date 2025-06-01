@@ -4,45 +4,46 @@ import CharForm from "@/components/charForm";
 import Layout from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import Addeds from "./Addeds";
 
-export const Characteristics= () => {
+export const Characteristics = () => {
   return (
     <Layout>
-    <>
-    <header className="p-6">
-        <h1 className="text-3xl font-semibold">Главная страница</h1>
-    </header>
-    <main className="flex-1 flex">
-    <div className="flex-1 p-6">
-        <Tabs defaultValue="templates">
-            <TabsList className="mb-6">
+      <>
+        <header className="p-6">
+          <h1 className="text-3xl font-semibold">Главная страница</h1>
+        </header>
+        <main className="flex-1 flex">
+          <div className="flex-1 p-6">
+            <Tabs defaultValue="templates">
+              <TabsList className="mb-6">
                 <TabsTrigger value="templates">Шаблоны</TabsTrigger>
                 <TabsTrigger value="added">Добавленные</TabsTrigger>
-            </TabsList>
-            {/* <TabsContent value="inventory">
+              </TabsList>
+              {/* <TabsContent value="inventory">
                 <InventoryTable items={inventoryItems} />
             </TabsContent> */}
-            <TabsContent value="templates">
+              <TabsContent value="templates">
                 <Templates />
-            </TabsContent>
-            {/* <TabsContent value="added">
+              </TabsContent>
+              <TabsContent value="added">
                 <Addeds />
-            </TabsContent> */}
-        </Tabs>
-    </div>
-    </main>
-    </>
-</Layout>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
+      </>
+    </Layout>
   );
 };
 
-const Templates = () => {
+export const Templates = () => {
   const { data: getEquipmentTypes } = useGetEquipmentTypesQuery();
   // const [onOpenChange, setOnOpenChange] = useState<boolean>(false)
   const [formVisible, setFormVisible] = useState(false);
   const [stepFormData, setStepFormData] = useState({
     name: "",
-    id: 0
+    id: 0,
   });
 
   return (
@@ -75,10 +76,7 @@ const Templates = () => {
       </div>
       {formVisible && (
         <div>
-          <CharForm
-            stepFormData={stepFormData}
-            onOpenChange={setFormVisible}
-          />
+          <CharForm stepFormData={stepFormData} onOpenChange={setFormVisible} />
         </div>
       )}
     </div>
