@@ -1,3 +1,4 @@
+// src/api/universityApi.ts - Fixed version
 import type {
   ElectronBoardSpecs,
   EquipmentTypes,
@@ -23,7 +24,7 @@ import { baseQueryWithReauth } from "./Auth/BaseQueryWithReauth";
 export const universityApi = createApi({
   reducerPath: "universityApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Equipment"],
+  tagTypes: ["Equipment", "EquipmentByRoom", "EquipmentTypesRoom", "Inventory"],
   endpoints: (builder) => ({
     getUniversities: builder.query<TUniversity[], void>({
       query: () => `university/`,
@@ -55,24 +56,33 @@ export const universityApi = createApi({
     }),
     getEquipmentByRoom: builder.query<TInventory, { roomId: number }>({
       query: ({ roomId }) => `inventory/equipment/equipment-by-room/${roomId}/`,
+      providesTags: (result, error, { roomId }) => [
+        { type: "EquipmentByRoom", id: roomId },
+        { type: "Equipment", id: "LIST" },
+      ],
     }),
     getEquipments: builder.query<TInventory, void>({
       query: () => `/inventory/equipment/`,
+      providesTags: [{ type: "Equipment", id: "LIST" }],
     }),
     getEquipmentsTypesRoom: builder.query<
       TEquipmnetTypesRoom[],
       { roomId: number }
     >({
       query: ({ roomId }) => `/inventory/equipment/by-room/${roomId}/data/`,
+      providesTags: (result, error, { roomId }) => [
+        { type: "EquipmentTypesRoom", id: roomId },
+        { type: "Equipment", id: "LIST" },
+      ],
     }),
     getEquipmentTypes: builder.query<EquipmentTypes[], void>({
       query: () => `/inventory/equipment-types/`,
     }),
     getAddedEquipments: builder.query<Tequipment[], void>({
       query: () => `/inventory/equipment/my-equipments/`,
+      providesTags: [{ type: "Equipment", id: "MY_LIST" }],
       transformResponse: (response: any) => {
         console.log("getAddedEquipments raw response:", response);
-        // Handle different response formats
         if (Array.isArray(response)) {
           return response;
         } else if (
@@ -174,13 +184,36 @@ export const universityApi = createApi({
       }),
     }),
 
+    // FIXED: Bulk create equipment with proper invalidation
     bulkCreateEquipment: builder.mutation({
       query: (body) => ({
         url: "inventory/equipment/bulk-create/",
         method: "POST",
         body,
       }),
+      invalidatesTags: (result, error, args) => {
+        const tags: (
+          | { type: "Equipment"; id: string }
+          | { type: "EquipmentByRoom"; id: string }
+          | { type: "EquipmentTypesRoom"; id: string }
+          | { type: "Inventory"; id: string }
+        )[] = [
+          { type: "Equipment", id: "LIST" },
+          { type: "Equipment", id: "MY_LIST" },
+          { type: "Inventory", id: "LIST" },
+        ];
+
+        if (args.room_id) {
+          tags.push(
+            { type: "EquipmentByRoom", id: args.room_id },
+            { type: "EquipmentTypesRoom", id: args.room_id }
+          );
+        }
+
+        return tags;
+      },
     }),
+
     bulkUpdateInn: builder.mutation<
       void,
       { equipments: { id: number; inn: number }[] }
@@ -190,7 +223,12 @@ export const universityApi = createApi({
         method: "POST",
         body,
       }),
+      invalidatesTags: [
+        { type: "Equipment", id: "LIST" },
+        { type: "Equipment", id: "MY_LIST" },
+      ],
     }),
+
     updateEquipmentStatus: builder.mutation<
       void,
       { equipmentId: number; status: string }
@@ -200,8 +238,13 @@ export const universityApi = createApi({
         method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: ["Equipment"],
+      invalidatesTags: (result, error, { equipmentId }) => [
+        { type: "Equipment", id: equipmentId },
+        { type: "Equipment", id: "LIST" },
+        { type: "Equipment", id: "MY_LIST" },
+      ],
     }),
+
     bulkUpdateEquipmentStatuses: builder.mutation<
       void,
       { updates: { id: number; status: string }[] }
@@ -211,7 +254,10 @@ export const universityApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Equipment"],
+      invalidatesTags: [
+        { type: "Equipment", id: "LIST" },
+        { type: "Equipment", id: "MY_LIST" },
+      ],
     }),
 
     moveEquipments: builder.mutation<
@@ -223,15 +269,25 @@ export const universityApi = createApi({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Equipment"],
+      invalidatesTags: (result, error, { to_room_id, from_room_id }) => [
+        { type: "Equipment", id: "LIST" },
+        { type: "EquipmentByRoom", id: to_room_id },
+        { type: "EquipmentByRoom", id: from_room_id },
+        { type: "EquipmentTypesRoom", id: to_room_id },
+        { type: "EquipmentTypesRoom", id: from_room_id },
+      ],
     }),
+
     deleteEquipments: builder.mutation<void, { ids: number[] }>({
       query: (body) => ({
         url: `/inventory/equipment/bulk-delete/`,
         method: "DELETE",
         body,
       }),
-      invalidatesTags: ["Equipment"],
+      invalidatesTags: [
+        { type: "Equipment", id: "LIST" },
+        { type: "Equipment", id: "MY_LIST" },
+      ],
     }),
   }),
 });

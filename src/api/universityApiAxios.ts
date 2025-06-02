@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import type {
   TUniversity,
   TBlock,
@@ -7,18 +7,21 @@ import type {
   TRoom,
   TInventory,
   TEquipmnetTypesRoom,
-  EquipmentTypes
-} from '@/types';
+  EquipmentTypes,
+} from "@/types";
 
 const api = axios.create({
-  baseURL: 'https://invenmaster.pythonanywhere.com/',
+  baseURL: "https://invenmaster.pythonanywhere.com/",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
+type MapType = {
+  room: number;
+};
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -28,95 +31,109 @@ api.interceptors.request.use((config) => {
 export const universityApi = {
   getUniversities: async (): Promise<TUniversity[]> => {
     try {
-      const response = await api.get('/university/');
+      const response = await api.get("/university/");
       return response.data;
     } catch (error) {
-      console.error('Universitetlarni olishda xato:', error);
+      console.error("Universitetlarni olishda xato:", error);
       throw error;
     }
   },
 
   getBlocks: async (univerId: number): Promise<TBlock[]> => {
     try {
-      const response = await api.get('/university/buildings/');
-      return response.data.filter((block: TBlock) => block.university === univerId);
+      const response = await api.get("/university/buildings/");
+      return response.data.filter(
+        (block: TBlock) => block.university === univerId
+      );
     } catch (error) {
-      console.error('Bloklarni olishda xato:', error);
+      console.error("Bloklarni olishda xato:", error);
       throw error;
     }
   },
 
   getFloors: async (): Promise<TFloor[]> => {
     try {
-      const response = await api.get('/university/floors/');
+      const response = await api.get("/university/floors/");
       return response.data;
     } catch (error) {
-      console.error('Qavatlarni olishda xato:', error);
+      console.error("Qavatlarni olishda xato:", error);
       throw error;
     }
   },
 
-  getFaculties: async (params: { buildingId: number; floorId: number }): Promise<TFaculty[]> => {
+  getFaculties: async (params: {
+    buildingId: number;
+    floorId: number;
+  }): Promise<TFaculty[]> => {
     try {
       const response = await api.get(
         `/university/faculties/?building_id=${params.buildingId}&floor_id=${params.floorId}`
       );
       return response.data.filter(
         (faculty: TFaculty) =>
-          faculty.building === params.buildingId && faculty.floor === params.floorId
+          faculty.building === params.buildingId &&
+          faculty.floor === params.floorId
       );
     } catch (error) {
-      console.error('Fakultetlarni olishda xato:', error);
+      console.error("Fakultetlarni olishda xato:", error);
       throw error;
     }
   },
 
   getRooms: async (): Promise<TRoom[]> => {
     try {
-      const response = await api.get('/university/rooms/');
+      const response = await api.get("/university/rooms/");
       return response.data;
     } catch (error) {
-      console.error('Xonalarni olishda xato:', error);
+      console.error("Xonalarni olishda xato:", error);
       throw error;
     }
   },
 
   getEquipmentByRoom: async (roomId: number): Promise<TInventory> => {
     try {
-      const response = await api.get(`/inventory/equipment/equipment-by-room/${roomId}/`);
+      const response = await api.get(
+        `/inventory/equipment/equipment-by-room/${roomId}/`
+      );
       return response.data;
     } catch (error) {
-      console.error('Jihozlarni olishda xato:', error);
+      console.error("Jihozlarni olishda xato:", error);
       throw error;
     }
   },
 
   getEquipments: async (): Promise<TInventory> => {
     try {
-      const response = await api.get('/inventory/equipment/');
+      const response = await api.get("/inventory/equipment/");
       return response.data;
     } catch (error) {
-      console.error('Barcha jihozlarni olishda xato:', error);
+      console.error("Barcha jihozlarni olishda xato:", error);
       throw error;
     }
   },
 
-  getEquipmentsTypesRoom: async (roomId: number): Promise<TEquipmnetTypesRoom[]> => {
+  getEquipmentsTypesRoom: async (
+    roomId: number
+  ): Promise<TEquipmnetTypesRoom[]> => {
     try {
-      const response = await api.get(`/inventory/equipment/by-room/${roomId}/data/`);
-      return response.data;
+      const response = await api.get(`inventory/equipment/my-equipments/`);
+      const equipmentsForRoom = response.data.filter(
+        (c: MapType) => c.room == roomId
+      );
+
+      return equipmentsForRoom;
     } catch (error) {
-      console.error('Jihoz turlarini olishda xato:', error);
+      console.error("Jihoz turlarini olishda xato:", error);
       throw error;
     }
   },
 
   getEquipmentTypes: async (): Promise<EquipmentTypes[]> => {
     try {
-      const response = await api.get('/inventory/equipment-types/');
+      const response = await api.get("/inventory/equipment-types/");
       return response.data;
     } catch (error) {
-      console.error('Jihoz turlarini olishda xato:', error);
+      console.error("Jihoz turlarini olishda xato:", error);
       throw error;
     }
   },

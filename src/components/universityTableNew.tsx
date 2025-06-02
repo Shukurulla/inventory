@@ -107,14 +107,23 @@ export function UniversityTable() {
     is_active: false,
   });
 
-  const { data: blocks = [], isLoading: blocksIsLoading } = useQuery({
+  // React Query with refetchOnMount for real-time updates
+  const {
+    data: blocks = [],
+    isLoading: blocksIsLoading,
+    refetch: refetchBlocks,
+  } = useQuery({
     queryKey: ["blocks", 1],
     queryFn: () => universityApi.getBlocks(1),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   const { data: floors = [], isLoading: floorsIsLoading } = useQuery({
     queryKey: ["floors"],
     queryFn: universityApi.getFloors,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   const { data: faculties = [], isLoading: facultiesIsLoading } = useQuery({
@@ -125,19 +134,30 @@ export function UniversityTable() {
         floorId: selectedFloorId!,
       }),
     enabled: !!selectedBlockId && !!selectedFloorId,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   const { data: rooms = [], isLoading: roomsIsLoading } = useQuery({
     queryKey: ["rooms"],
     queryFn: universityApi.getRooms,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
-  const { data: equipmentsTypesRoom = [], isLoading: equipmentsIsLoading } =
-    useQuery({
-      queryKey: ["equipmentsTypesRoom", selectedRoomId],
-      queryFn: () => universityApi.getEquipmentsTypesRoom(selectedRoomId!),
-      enabled: !!selectedRoomId,
-    });
+  const {
+    data: equipmentsTypesRoom = [],
+    isLoading: equipmentsIsLoading,
+    refetch: refetchEquipments,
+  } = useQuery({
+    queryKey: ["equipmentsTypesRoom", selectedRoomId],
+    queryFn: () => universityApi.getEquipmentsTypesRoom(selectedRoomId!),
+    enabled: !!selectedRoomId,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    // Polling every 10 seconds when modal is not open
+    refetchInterval: showModal ? false : 10000,
+  });
 
   const handleSelect = (
     type: "block" | "floor" | "faculty" | "room",
@@ -173,6 +193,21 @@ export function UniversityTable() {
         faculty: openAccordions.faculty,
         room: id || undefined,
       });
+    }
+  };
+
+  // Handle modal close and refetch data
+  const handleModalClose = (open: boolean) => {
+    setShowModal(open);
+    if (!open) {
+      // Refetch data when modal closes to show new equipment
+      console.log("Modal closed, refetching equipment data...");
+      refetchEquipments();
+
+      // Also refetch blocks and rooms to get updated counts
+      setTimeout(() => {
+        refetchBlocks();
+      }, 1000);
     }
   };
 
@@ -257,9 +292,33 @@ export function UniversityTable() {
     if (!selectedEquipment) return;
 
     try {
-      // Here you would call an update API
-      toast.success("Оборудование успешно обновлено!");
-      setShowEditModal(false);
+      // API call to update equipment
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `https://invenmaster.pythonanywhere.com/inventory/equipment/${selectedEquipment.id}/`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: editFormData.name,
+            description: editFormData.description,
+            status: editFormData.status,
+            is_active: editFormData.is_active,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Оборудование успешно обновлено!");
+        setShowEditModal(false);
+        // Refetch equipment data
+        refetchEquipments();
+      } else {
+        throw new Error("Failed to update equipment");
+      }
     } catch (error) {
       console.error("Failed to update equipment:", error);
       errorValidatingWithToast(error);
@@ -270,9 +329,30 @@ export function UniversityTable() {
     if (!selectedEquipment) return;
 
     try {
-      // Here you would call a delete API
-      toast.success("Оборудование успешно удалено!");
-      setShowDeleteModal(false);
+      // API call to delete equipment
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `https://invenmaster.pythonanywhere.com/inventory/equipment/bulk-delete/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ids: [selectedEquipment.id],
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Оборудование успешно удалено!");
+        setShowDeleteModal(false);
+        // Refetch equipment data
+        refetchEquipments();
+      } else {
+        throw new Error("Failed to delete equipment");
+      }
     } catch (error) {
       console.error("Failed to delete equipment:", error);
       errorValidatingWithToast(error);
@@ -346,15 +426,19 @@ export function UniversityTable() {
           </div>
           <div className="flex items-center gap-4">
             <span className="bg-indigo-50 dark:bg-zinc-800 dark:text-indigo-400 px-3 py-1 rounded-full text-indigo-600 font-medium">
-              {equipmentType.items?.length || 0}
+              {equipmentType.length || 0}
             </span>
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50"
-              onClick={() => {
-                setSelectedEquipmentType(equipmentType);
-                setShowModal(true);
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("Adding equipment to room:", selectedRoomId);
+                if (selectedRoomId) {
+                  setSelectedEquipmentType(equipmentType);
+                  setShowModal(true);
+                }
               }}
             >
               <Plus className="h-5 w-5 text-blue-500" />
@@ -389,7 +473,10 @@ export function UniversityTable() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleEquipmentEdit(item)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEquipmentEdit(item);
+                    }}
                     className="h-6 w-6 text-blue-500 hover:bg-blue-100"
                   >
                     <Edit className="h-3 w-3" />
@@ -397,7 +484,10 @@ export function UniversityTable() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleEquipmentDelete(item)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEquipmentDelete(item);
+                    }}
                     className="h-6 w-6 text-red-500 hover:bg-red-100"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -508,7 +598,11 @@ export function UniversityTable() {
                       onClick={() => {
                         // Blok uchun inventory qo'shish logikasi
                         console.log("Adding inventory to block:", block.id);
-                        setShowModal(true);
+                        if (selectedRoomId) {
+                          setShowModal(true);
+                        } else {
+                          toast.warning("Сначала выберите кабинет");
+                        }
                       }}
                       className="ml-3"
                     />
@@ -548,12 +642,15 @@ export function UniversityTable() {
                               <AddInventoryButton
                                 level="этаж"
                                 onClick={() => {
-                                  // Floor uchun inventory qo'shish logikasi
                                   console.log(
                                     "Adding inventory to floor:",
                                     floor.id
                                   );
-                                  setShowModal(true);
+                                  if (selectedRoomId) {
+                                    setShowModal(true);
+                                  } else {
+                                    toast.warning("Сначала выберите кабинет");
+                                  }
                                 }}
                                 className="ml-3"
                               />
@@ -596,12 +693,17 @@ export function UniversityTable() {
                                       <AddInventoryButton
                                         level="факультет"
                                         onClick={() => {
-                                          // Faculty uchun inventory qo'shish logikasi
                                           console.log(
                                             "Adding inventory to faculty:",
                                             faculty.id
                                           );
-                                          setShowModal(true);
+                                          if (selectedRoomId) {
+                                            setShowModal(true);
+                                          } else {
+                                            toast.warning(
+                                              "Сначала выберите кабинет"
+                                            );
+                                          }
                                         }}
                                         className="ml-3"
                                       />
@@ -632,29 +734,33 @@ export function UniversityTable() {
                                         {equipmentsIsLoading && (
                                           <AccordionSkeleton />
                                         )}
+
                                         {!equipmentsIsLoading &&
-                                          equipmentsTypesRoom.length === 0 && (
-                                            <>
-                                              <p className="ml-3 text-gray-500 p-4">
-                                                Пустая строка...
-                                              </p>
-                                              <AddInventoryButton
-                                                level="кабинет"
-                                                onClick={() => {
-                                                  // Room uchun inventory qo'shish logikasi
+                                          equipmentsTypesRoom.map((equipment) =>
+                                            renderEquipmentTypeRow(equipment)
+                                          )}
+
+                                        {/* Always show add button if room is selected */}
+                                        {selectedRoomId === room.id &&
+                                          !equipmentsIsLoading && (
+                                            <div className="p-4 border-t border-gray-100 dark:border-gray-700 ml-3">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
                                                   console.log(
-                                                    "Adding inventory to room:",
+                                                    "Adding equipment to selected room:",
                                                     room.id
                                                   );
                                                   setShowModal(true);
                                                 }}
-                                                className="ml-3"
-                                              />
-                                            </>
-                                          )}
-                                        {!equipmentsIsLoading &&
-                                          equipmentsTypesRoom.map((equipment) =>
-                                            renderEquipmentTypeRow(equipment)
+                                              >
+                                                <Plus className="h-4 w-4" />
+                                                Добавить новую технику
+                                              </Button>
+                                            </div>
                                           )}
                                       </AccordionWrapper>
                                     );
@@ -674,7 +780,7 @@ export function UniversityTable() {
       <InventoryModal
         open={showModal}
         roomId={selectedRoomId}
-        onOpenChange={setShowModal}
+        onOpenChange={handleModalClose}
       />
 
       {/* Edit Equipment Modal */}
