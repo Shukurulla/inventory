@@ -15,6 +15,7 @@ type Theme = "light" | "dark" | "system";
 const SettingsPage: React.FC = () => {
   const [theme, setTheme] = useState<Theme>("light");
   const [currentFont, setCurrentFont] = useState("SF Pro Display");
+  console.log(theme);
 
   // Profile data
   const [profileData, setProfileData] = useState({
