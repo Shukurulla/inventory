@@ -1,9 +1,11 @@
+// src/pages/AddedEquipmentsPage.tsx - Fixed version
 import {
   useDeleteEquipmentsMutation,
   useGetAddedEquipmentsQuery,
   useGetBlocksQuery,
   useGetEquipmentTypesQuery,
   useGetRoomsQuery,
+  useUpdateEquipmentStatusMutation,
 } from "@/api/universityApi";
 import DesktopIcon from "@/assets/Icons/DesktopIcon";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ import {
   Trash2,
   Edit,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import React, { useState, type JSX } from "react";
 import { EQUIPMENT_TYPES } from "../types";
@@ -84,8 +87,11 @@ const AddedEquipmentPage: React.FC = () => {
     isLoading,
     refetch,
   } = useGetAddedEquipmentsQuery();
+
   const [deleteEquipment, { isLoading: isDeleting }] =
     useDeleteEquipmentsMutation();
+  const [updateEquipmentStatus, { isLoading: isUpdating }] =
+    useUpdateEquipmentStatusMutation();
 
   const inventoryIcons: EquipmentIcons[] = [
     {
@@ -208,10 +214,17 @@ const AddedEquipmentPage: React.FC = () => {
     if (!selectedEquipment) return;
 
     try {
-      // Here you would call an update API if it exists
-      // For now, we'll just show a success message
+      // Update equipment using the proper API
+      await updateEquipmentStatus({
+        equipmentId: selectedEquipment.id,
+        status: editFormData.status,
+      }).unwrap();
+
+      // Show success message
       toast.success("Оборудование успешно обновлено!");
       setEditModalOpen(false);
+
+      // Refetch data to get updated information
       await refetch();
     } catch (error) {
       console.error("Failed to update equipment:", error);
@@ -226,6 +239,8 @@ const AddedEquipmentPage: React.FC = () => {
       await deleteEquipment({ ids: [selectedEquipment.id] }).unwrap();
       toast.success("Оборудование успешно удалено!");
       setDeleteModalOpen(false);
+
+      // Refetch data to update the list
       await refetch();
     } catch (error) {
       console.error("Failed to delete equipment:", error);
@@ -251,12 +266,7 @@ const AddedEquipmentPage: React.FC = () => {
   return (
     <Layout>
       <>
-        <header className="p-6">
-          <h1 className="text-3xl font-semibold text-accent-foreground">
-            Добавленные
-          </h1>
-        </header>
-        <main className="flex-1 flex">
+        <main className="flex-1 mt-3 flex">
           <div className="flex-1 px-6">
             {/* Filter Section */}
             <div className="flex space-x-4 mb-6">
@@ -523,15 +533,23 @@ const AddedEquipmentPage: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={() => setEditModalOpen(false)}
-                    className="bg-gray-200 hover:bg-gray-300"
+                    disabled={isUpdating}
                   >
                     Отменить
                   </Button>
                   <Button
                     onClick={handleEditSave}
+                    disabled={isUpdating}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white"
                   >
-                    Сохранить
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      "Сохранить"
+                    )}
                   </Button>
                 </div>
               </DialogContent>
@@ -562,7 +580,7 @@ const AddedEquipmentPage: React.FC = () => {
                   <Button
                     variant="outline"
                     onClick={() => setDeleteModalOpen(false)}
-                    className="bg-gray-200 hover:bg-gray-300"
+                    disabled={isDeleting}
                   >
                     Отменить
                   </Button>
@@ -571,7 +589,14 @@ const AddedEquipmentPage: React.FC = () => {
                     disabled={isDeleting}
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    {isDeleting ? "Удаление..." : "Удалить"}
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                        Удаление...
+                      </>
+                    ) : (
+                      "Удалить"
+                    )}
                   </Button>
                 </div>
               </DialogContent>

@@ -4,15 +4,12 @@ import CharForm from "@/components/charForm";
 import Layout from "@/components/layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import Addeds from "./Addeds";
+import { TemplatesManagement } from "@/components/TemplatesManagement";
 
 export const Characteristics = () => {
   return (
     <Layout>
       <>
-        <header className="p-6">
-          <h1 className="text-3xl font-semibold">Главная страница</h1>
-        </header>
         <main className="flex-1 flex">
           <div className="flex-1 p-6">
             <Tabs defaultValue="templates">
@@ -20,14 +17,12 @@ export const Characteristics = () => {
                 <TabsTrigger value="templates">Шаблоны</TabsTrigger>
                 <TabsTrigger value="added">Добавленные</TabsTrigger>
               </TabsList>
-              {/* <TabsContent value="inventory">
-                <InventoryTable items={inventoryItems} />
-            </TabsContent> */}
+
               <TabsContent value="templates">
                 <Templates />
               </TabsContent>
               <TabsContent value="added">
-                <Addeds />
+                <TemplatesManagement />
               </TabsContent>
             </Tabs>
           </div>

@@ -11,9 +11,6 @@ export default function MainPage() {
   return (
     <Layout>
       <>
-        <header className="p-6">
-          <h1 className="text-3xl font-semibold">Главная страница</h1>
-        </header>
         <main className="flex-1 flex">
           <div className="flex-1 p-6">
             {/* Custom Tab Navigation */}

@@ -1,7 +1,7 @@
 import { useRoutes } from "react-router-dom";
 import MainPage from "@/pages/MainPage";
 import Login from "@/pages/Login";
-import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from "./ProtectedRoute.tsx";
 import ContractsPage from "@/pages/Contracts";
 import { Characteristics } from "@/pages/Characteristics";
 import SettingsPage from "@/pages/Settings";
