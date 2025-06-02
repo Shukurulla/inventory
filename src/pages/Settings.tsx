@@ -15,7 +15,6 @@ type Theme = "light" | "dark" | "system";
 const SettingsPage: React.FC = () => {
   const [theme, setTheme] = useState<Theme>("light");
   const [currentFont, setCurrentFont] = useState("SF Pro Display");
-  console.log(theme);
 
   // Profile data
   const [profileData, setProfileData] = useState({
@@ -35,7 +34,7 @@ const SettingsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const savedTheme = (localStorage.getItem("theme") as Theme) || "system";
+    const savedTheme = localStorage.getItem("theme") as Theme;
     const savedFont = localStorage.getItem("font") || "SF Pro Display";
     setTheme(savedTheme);
     setCurrentFont(savedFont);
