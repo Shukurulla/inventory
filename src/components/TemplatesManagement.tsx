@@ -1,4 +1,4 @@
-// src/components/TemplatesManagement.tsx - Complete Fixed version
+// src/components/TemplatesManagement.tsx - Updated with Edit Forms
 import { useState } from "react";
 import {
   useGetEquipmentTypesQuery,
@@ -32,6 +32,25 @@ import GogglesIcon from "@/assets/Icons/GogglesIcon";
 import { Edit, Trash2, CircleIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import type { JSX } from "react";
+import { DesktopForm } from "./DeskTopForm";
+import { ProjectorAddForm } from "./AddProjectorForm";
+import { PrinterForm } from "./PrinterForm";
+import { MonoBlokForm } from "./MonoblokForm";
+import { ElectronBoardForm } from "./ElectronicBoardForm";
+import { TvForm } from "./TvForm";
+import { LaptopForm } from "./LaptopForm";
+import { RouterForm } from "./RouterForm";
+import type {
+  TCompSpecifications,
+  ProjectorSpecs,
+  PrinterSpecs,
+  MonoblokSpecs,
+  ElectronBoardSpecs,
+  TVSpecs,
+  LaptopSpecs,
+  RouterSpecs,
+  createEquipmentBodyType,
+} from "@/types";
 
 interface EquipmentIcons {
   icon: JSX.Element;
@@ -60,6 +79,39 @@ export const TemplatesManagement = () => {
   const [deleteTemplateModal, setDeleteTemplateModal] = useState(false);
   const [editTemplateModal, setEditTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+
+  // Edit form data state
+  const [equipmentFormData, setEquipmentFormData] =
+    useState<createEquipmentBodyType>({
+      type_id: 0,
+      room_id: 0,
+      description: "",
+      status: "",
+      contract_id: null,
+      count: 1,
+      name: "",
+      name_prefix: "",
+      is_active: false,
+      photo: undefined,
+      computer_details: null,
+      printer_char: null,
+      extender_char: null,
+      router_char: null,
+      tv_char: null,
+      notebook_char: null,
+      monoblok_char: null,
+      projector_char: null,
+      whiteboard_char: null,
+      computer_specification_id: null,
+      printer_specification_id: null,
+      extender_specification_id: null,
+      router_specification_id: null,
+      tv_specification_id: null,
+      notebook_specification_id: null,
+      monoblok_specification_id: null,
+      projector_specification_id: null,
+      whiteboard_specification_id: null,
+    });
 
   const inventoryIcons: EquipmentIcons[] = [
     {
@@ -196,6 +248,67 @@ export const TemplatesManagement = () => {
 
   const handleEdit = (template: any) => {
     setSelectedTemplate(template);
+
+    // Populate form data based on template type
+    switch (template.type) {
+      case "Компьютер":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          computer_details: template,
+          computer_specification_id: template.id,
+        }));
+        break;
+      case "Проектор":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          projector_char: template,
+          projector_specification_id: template.id,
+        }));
+        break;
+      case "Принтер":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          printer_char: template,
+          printer_specification_id: template.id,
+        }));
+        break;
+      case "Моноблок":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          monoblok_char: template,
+          monoblok_specification_id: template.id,
+        }));
+        break;
+      case "Электронная доска":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          whiteboard_char: template,
+          whiteboard_specification_id: template.id,
+        }));
+        break;
+      case "Телевизор":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          tv_char: template,
+          tv_specification_id: template.id,
+        }));
+        break;
+      case "Ноутбук":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          notebook_char: template,
+          notebook_specification_id: template.id,
+        }));
+        break;
+      case "Роутер":
+        setEquipmentFormData((prev) => ({
+          ...prev,
+          router_char: template,
+          router_specification_id: template.id,
+        }));
+        break;
+    }
+
     setEditTemplateModal(true);
   };
 
@@ -229,6 +342,80 @@ export const TemplatesManagement = () => {
     } catch (error) {
       console.error("Failed to delete template:", error);
       toast.error("Ошибка при удалении шаблона");
+    }
+  };
+
+  // Render appropriate edit form based on template type
+  const renderEditForm = () => {
+    if (!selectedTemplate) return null;
+
+    switch (selectedTemplate.type) {
+      case "Компьютер":
+        return (
+          <DesktopForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Проектор":
+        return (
+          <ProjectorAddForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Принтер":
+        return (
+          <PrinterForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Моноблок":
+        return (
+          <MonoBlokForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Электронная доска":
+        return (
+          <ElectronBoardForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Телевизор":
+        return (
+          <TvForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Ноутбук":
+        return (
+          <LaptopForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      case "Роутер":
+        return (
+          <RouterForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+            create={false}
+          />
+        );
+      default:
+        return <div>Неизвестный тип оборудования</div>;
     }
   };
 
@@ -374,22 +561,13 @@ export const TemplatesManagement = () => {
 
       {/* Edit Template Modal */}
       <Dialog open={editTemplateModal} onOpenChange={setEditTemplateModal}>
-        <DialogContent className="w-[50%]">
+        <DialogContent className="w-[70%] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Редактировать шаблон</DialogTitle>
+            <DialogTitle>
+              Редактировать шаблон - {selectedTemplate?.type}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-muted-foreground">
-                Редактирование шаблона:{" "}
-                <strong>{selectedTemplate?.title}</strong>
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Тип: {selectedTemplate?.type}
-              </p>
-            </div>
-            {/* Here you would add specific form fields based on template type */}
-          </div>
+          <div className="space-y-4">{renderEditForm()}</div>
           <div className="flex justify-end space-x-2 mt-6">
             <Button
               variant="outline"
@@ -401,7 +579,7 @@ export const TemplatesManagement = () => {
               onClick={handleEditSave}
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
-              Сохранить
+              Сохранить изменения
             </Button>
           </div>
         </DialogContent>

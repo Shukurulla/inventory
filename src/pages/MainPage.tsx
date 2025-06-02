@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
-import { UniversityTable } from "@/components/universityTableNew";
+import { UniversityTable } from "@/components/universityTableNew"; // Bu qatorni o'zgartiring
 import { StatusTable } from "@/components/StatusTable";
 
 type TabType = "status" | "university";

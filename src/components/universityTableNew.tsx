@@ -39,7 +39,6 @@ import { toast } from "react-toastify";
 import { errorValidatingWithToast } from "@/utils/ErrorValidation";
 import { CircleIcon } from "lucide-react";
 import type { JSX } from "react";
-import { EQUIPMENT_TYPES } from "@/types";
 
 interface EquipmentIcons {
   icon: JSX.Element;
@@ -399,119 +398,113 @@ export function UniversityTable() {
     </div>
   );
 
+  // Equipment type row - styled like Dobavleniya page
   const renderEquipmentTypeRow = (equipmentType: TEquipmnetTypesRoom) => {
     const matchedIcon = inventoryIcons.find(
       (icon) => icon.name === equipmentType.name
     );
 
     return (
-      <div
+      <CustomAccordion
         key={equipmentType.name}
-        className="border-t ml-3 bg-white dark:bg-zinc-900 first:border-t-0"
-      >
-        <div className="flex items-center justify-between py-4 px-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-          <div className="flex items-center gap-4 flex-1">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                matchedIcon?.color || "bg-blue-50 dark:bg-accent"
-              }`}
-            >
-              <div className="text-gray-600">
-                {matchedIcon?.icon || <CircleIcon />}
+        value={`equipments-${equipmentType.name}`}
+        className="bg-white dark:bg-zinc-950 border-t first:border-t-0 ml-3"
+        triggerContent={
+          <div className="flex items-center justify-between w-full pr-4">
+            <IconLabel
+              icon={() => (
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    matchedIcon?.color || "bg-blue-50 dark:bg-accent"
+                  }`}
+                >
+                  <div className="text-gray-600">
+                    {matchedIcon?.icon || <CircleIcon />}
+                  </div>
+                </div>
+              )}
+              color="#000"
+              className="flex-1"
+              label={equipmentType.name}
+            />
+            <div className="flex-1 flex justify-center">
+              <div className="bg-indigo-50 dark:bg-zinc-800 dark:text-indigo-400 w-12 h-12 rounded-full flex items-center justify-center text-indigo-600 font-medium">
+                {equipmentType.items?.length || 0}
               </div>
             </div>
-            <span className="text-lg font-medium text-gray-800 dark:text-gray-200">
-              {equipmentType.name}
-            </span>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (selectedRoomId) {
+                    setSelectedEquipmentType(equipmentType);
+                    setShowModal(true);
+                  }
+                }}
+              >
+                <Plus className="h-5 w-5 text-blue-500" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="bg-indigo-50 dark:bg-zinc-800 dark:text-indigo-400 px-3 py-1 rounded-full text-indigo-600 font-medium">
-              {equipmentType.length || 0}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("Adding equipment to room:", selectedRoomId);
-                if (selectedRoomId) {
-                  setSelectedEquipmentType(equipmentType);
-                  setShowModal(true);
-                }
-              }}
-            >
-              <Plus className="h-5 w-5 text-blue-500" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Equipment Items */}
-        {equipmentType.items && equipmentType.items.length > 0 && (
-          <div className="pl-8 pr-4 pb-4">
-            {equipmentType.items.slice(0, 3).map((item) => (
+        }
+      >
+        <div className="bg-indigo-50 dark:bg-zinc-950 p-0">
+          {equipmentType.items && equipmentType.items.length > 0 ? (
+            equipmentType.items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-zinc-800 rounded-lg mb-2"
+                className="flex justify-between items-center p-4 border-b dark:border-zinc-700 bg-background first:border-t border-t-zinc-200 dark:border-t-zinc-700 border-gray-200 last:border-b-0"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-medium text-blue-600 dark:text-blue-300">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      matchedIcon?.color || "bg-blue-50 dark:bg-accent"
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
                       {equipmentType.name.charAt(0)}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <div className="flex flex-col">
+                    <span className="text-accent-foreground text-lg font-medium">
                       {item.name}
                     </span>
-                    <div className="text-xs text-gray-500">
-                      {getStatusText(item.status)}
-                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {getStatusText(item.status)} - ИНН:{" "}
+                      {item.uid || `ИНН-${item.id.toString().padStart(9, "0")}`}
+                    </span>
                   </div>
                 </div>
-                <div className="flex space-x-1">
+                <div className="flex space-x-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEquipmentEdit(item);
-                    }}
-                    className="h-6 w-6 text-blue-500 hover:bg-blue-100"
+                    onClick={() => handleEquipmentEdit(item)}
+                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full"
                   >
-                    <Edit className="h-3 w-3" />
+                    <Edit className="h-5 w-5" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEquipmentDelete(item);
-                    }}
-                    className="h-6 w-6 text-red-500 hover:bg-red-100"
+                    onClick={() => handleEquipmentDelete(item)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
               </div>
-            ))}
-            {equipmentType.items.length > 3 && (
-              <div className="text-center">
-                <Button
-                  variant="ghost"
-                  className="text-xs text-gray-500"
-                  onClick={() => {
-                    setSelectedEquipmentType(equipmentType);
-                    setShowModal(true);
-                  }}
-                >
-                  Показать ещё {equipmentType.items.length - 3} элементов...
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+            ))
+          ) : (
+            <div className="p-4 text-center text-gray-500">
+              Нет оборудования этого типа
+            </div>
+          )}
+        </div>
+      </CustomAccordion>
     );
   };
 
@@ -596,8 +589,6 @@ export function UniversityTable() {
                     <AddInventoryButton
                       level="блок"
                       onClick={() => {
-                        // Blok uchun inventory qo'shish logikasi
-                        console.log("Adding inventory to block:", block.id);
                         if (selectedRoomId) {
                           setShowModal(true);
                         } else {
@@ -642,10 +633,6 @@ export function UniversityTable() {
                               <AddInventoryButton
                                 level="этаж"
                                 onClick={() => {
-                                  console.log(
-                                    "Adding inventory to floor:",
-                                    floor.id
-                                  );
                                   if (selectedRoomId) {
                                     setShowModal(true);
                                   } else {
@@ -693,10 +680,6 @@ export function UniversityTable() {
                                       <AddInventoryButton
                                         level="факультет"
                                         onClick={() => {
-                                          console.log(
-                                            "Adding inventory to faculty:",
-                                            faculty.id
-                                          );
                                           if (selectedRoomId) {
                                             setShowModal(true);
                                           } else {
@@ -736,8 +719,17 @@ export function UniversityTable() {
                                         )}
 
                                         {!equipmentsIsLoading &&
+                                          equipmentsTypesRoom.length > 0 &&
                                           equipmentsTypesRoom.map((equipment) =>
                                             renderEquipmentTypeRow(equipment)
+                                          )}
+
+                                        {!equipmentsIsLoading &&
+                                          equipmentsTypesRoom.length === 0 && (
+                                            <div className="p-4 text-center text-gray-500 ml-3">
+                                              В этой комнате пока нет
+                                              оборудования
+                                            </div>
                                           )}
 
                                         {/* Always show add button if room is selected */}
@@ -750,10 +742,6 @@ export function UniversityTable() {
                                                 className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  console.log(
-                                                    "Adding equipment to selected room:",
-                                                    room.id
-                                                  );
                                                   setShowModal(true);
                                                 }}
                                               >
