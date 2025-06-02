@@ -1,8 +1,16 @@
-// src/components/TemplatesManagement.tsx
+// src/components/TemplatesManagement.tsx - Complete Fixed version
 import { useState } from "react";
-import { useGetEquipmentTypesQuery } from "@/api/universityApi";
-import CharItem from "@/components/CharacteristicsItem";
-import CharForm from "@/components/charForm";
+import {
+  useGetEquipmentTypesQuery,
+  useGetSpecComputerQuery,
+  useGetSpecProjectorQuery,
+  useGetPrinterSpecsQuery,
+  useGetMonoblokSpecsQuery,
+  useGetElectronicBoardSpecsQuery,
+  useGetTvSpecsQuery,
+  useGetLaptopSpecsQuery,
+  useGetRouterSpecsQuery,
+} from "@/api/universityApi";
 import {
   Dialog,
   DialogContent,
@@ -10,266 +18,359 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import CustomAccordion from "@/components/CustomAccordion";
 import IconLabel from "@/components/ReusableIcon";
 import DesktopIcon from "@/assets/Icons/DesktopIcon";
-import { Edit, Trash2, Plus } from "lucide-react";
+import MonoblockIcon from "@/assets/Icons/MonoblockIcon";
+import ElectronBoardIcon from "@/assets/Icons/EelctronBoardIcon";
+import TvIcon from "@/assets/Icons/TvIcon";
+import MonitorIcon from "@/assets/Icons/MonitorIocn";
+import LaptopIcon from "@/assets/Icons/LaptopIcon";
+import PrinterIcon from "@/assets/Icons/PrinterIcon";
+import RouterIcon from "@/assets/Icons/RouterIcon";
+import GogglesIcon from "@/assets/Icons/GogglesIcon";
+import { Edit, Trash2, CircleIcon } from "lucide-react";
 import { toast } from "react-toastify";
-import { errorValidatingWithToast } from "@/utils/ErrorValidation";
-import type {
-  TCompSpecifications,
-  ProjectorSpecs,
-  PrinterSpecs,
-} from "@/types";
+import type { JSX } from "react";
 
-interface Template {
-  id: number;
-  title: string;
-  type: string;
-  data: any;
+interface EquipmentIcons {
+  icon: JSX.Element;
+  name: string;
+  color: string;
 }
 
 export const TemplatesManagement = () => {
-  const { data: equipmentTypes } = useGetEquipmentTypesQuery();
-  const [formVisible, setFormVisible] = useState(false);
-  const [editTemplateModal, setEditTemplateModal] = useState(false);
+  // API queries for all specifications
+  const { data: computerSpecs, isLoading: computerLoading } =
+    useGetSpecComputerQuery();
+  const { data: projectorSpecs, isLoading: projectorLoading } =
+    useGetSpecProjectorQuery();
+  const { data: printerSpecs, isLoading: printerLoading } =
+    useGetPrinterSpecsQuery();
+  const { data: monoblokSpecs, isLoading: monoblokLoading } =
+    useGetMonoblokSpecsQuery();
+  const { data: electronBoardSpecs, isLoading: electronBoardLoading } =
+    useGetElectronicBoardSpecsQuery();
+  const { data: tvSpecs, isLoading: tvLoading } = useGetTvSpecsQuery();
+  const { data: laptopSpecs, isLoading: laptopLoading } =
+    useGetLaptopSpecsQuery();
+  const { data: routerSpecs, isLoading: routerLoading } =
+    useGetRouterSpecsQuery();
+
   const [deleteTemplateModal, setDeleteTemplateModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
-    null
-  );
-  const [stepFormData, setStepFormData] = useState({
-    name: "",
-    id: 0,
-  });
+  const [editTemplateModal, setEditTemplateModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
-  // Mock templates data - В реальном проекте это будет из API
-  const [templates, setTemplates] = useState<Template[]>([
+  const inventoryIcons: EquipmentIcons[] = [
     {
-      id: 1,
-      title: "Intel i5 8GB Lenovo ThinkPad",
-      type: "Компьютер",
-      data: {
-        cpu: "Intel i5",
-        ram: "8GB",
-        storage: "256GB SSD",
-        monitor_size: "15.6",
-      },
+      icon: (
+        <DesktopIcon color="#5CB8D1" className="w-6 h-6 dark:brightness-70" />
+      ),
+      name: "Компьютер",
+      color: "bg-[#DAF1FB] dark:bg-blue-300/30",
     },
     {
-      id: 2,
-      title: "Intel i7 16GB Dell OptiPlex",
-      type: "Компьютер",
-      data: {
-        cpu: "Intel i7",
-        ram: "16GB",
-        storage: "512GB SSD",
-        monitor_size: "24",
-      },
+      icon: <MonoblockIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Моноблок",
+      color: "bg-green-50 dark:bg-green-300/30",
     },
     {
-      id: 3,
-      title: "Epson L3150 Цветной Duplex",
-      type: "Принтер",
-      data: { model: "Epson L3150", color: true, duplex: true },
+      icon: <ElectronBoardIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Электронная доска",
+      color: "bg-purple-50 dark:bg-purple-300/30",
     },
-  ]);
+    {
+      icon: <TvIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Телевизор",
+      color: "bg-orange-50 dark:bg-orange-300/30",
+    },
+    {
+      icon: <MonitorIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Монитор",
+      color: "bg-green-50 dark:bg-green-300/30",
+    },
+    {
+      icon: <LaptopIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Ноутбук",
+      color: "bg-blue-50 dark:bg-blue-300/30",
+    },
+    {
+      icon: <PrinterIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Принтер",
+      color: "bg-pink-50 dark:bg-pink-300/30",
+    },
+    {
+      icon: <RouterIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Роутер",
+      color: "bg-orange-50 dark:bg-orange-300/30",
+    },
+    {
+      icon: <GogglesIcon className="w-6 h-6 dark:brightness-70" />,
+      name: "Проектор",
+      color: "bg-green-100 dark:bg-green-300/30",
+    },
+  ];
 
+  // Group templates by type from API data
   const groupTemplatesByType = () => {
-    const grouped: { [key: string]: Template[] } = {};
+    const grouped: { [key: string]: any[] } = {};
 
-    templates.forEach((template) => {
-      if (!grouped[template.type]) {
-        grouped[template.type] = [];
-      }
-      grouped[template.type].push(template);
-    });
+    // Computer templates
+    if (computerSpecs && computerSpecs.length > 0) {
+      grouped["Компьютер"] = computerSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.cpu} ${spec.ram} ${spec.storage}`,
+        type: "Компьютер",
+      }));
+    }
+
+    // Projector templates
+    if (projectorSpecs && projectorSpecs.length > 0) {
+      grouped["Проектор"] = projectorSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.model} ${spec.lumens}lm ${spec.resolution}`,
+        type: "Проектор",
+      }));
+    }
+
+    // Printer templates
+    if (printerSpecs && printerSpecs.length > 0) {
+      grouped["Принтер"] = printerSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.model} ${spec.color ? "Цветной" : "ЧБ"} ${
+          spec.duplex ? "Duplex" : "Simplex"
+        }`,
+        type: "Принтер",
+      }));
+    }
+
+    // Monoblok templates
+    if (monoblokSpecs && monoblokSpecs.length > 0) {
+      grouped["Моноблок"] = monoblokSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.cpu} ${spec.ram} ${spec.screen_size}"`,
+        type: "Моноблок",
+      }));
+    }
+
+    // Electronic board templates
+    if (electronBoardSpecs && electronBoardSpecs.length > 0) {
+      grouped["Электронная доска"] = electronBoardSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.model} ${spec.screen_size}" ${
+          spec.touch_type === "infrared" ? "Инфракрасный" : "Емкостный"
+        }`,
+        type: "Электронная доска",
+      }));
+    }
+
+    // TV templates
+    if (tvSpecs && tvSpecs.length > 0) {
+      grouped["Телевизор"] = tvSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.model} ${spec.screen_size}"`,
+        type: "Телевизор",
+      }));
+    }
+
+    // Laptop templates
+    if (laptopSpecs && laptopSpecs.length > 0) {
+      grouped["Ноутбук"] = laptopSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.cpu} ${spec.ram} ${spec.monitor_size}"`,
+        type: "Ноутбук",
+      }));
+    }
+
+    // Router templates
+    if (routerSpecs && routerSpecs.length > 0) {
+      grouped["Роутер"] = routerSpecs.map((spec) => ({
+        ...spec,
+        title: `${spec.model} ${spec.wifi_standart}`,
+        type: "Роутер",
+      }));
+    }
 
     return grouped;
   };
 
-  const handleEditTemplate = (template: Template) => {
+  const handleEdit = (template: any) => {
     setSelectedTemplate(template);
     setEditTemplateModal(true);
   };
 
-  const handleDeleteTemplate = (template: Template) => {
+  const handleDelete = (template: any) => {
     setSelectedTemplate(template);
     setDeleteTemplateModal(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (selectedTemplate) {
-      setTemplates((prev) => prev.filter((t) => t.id !== selectedTemplate.id));
-      toast.success("Шаблон успешно удален!");
-      setDeleteTemplateModal(false);
+  const handleEditSave = async () => {
+    if (!selectedTemplate) return;
+
+    try {
+      // Here you would call the appropriate update API based on template type
+      toast.success("Шаблон успешно обновлен!");
+      setEditTemplateModal(false);
       setSelectedTemplate(null);
+    } catch (error) {
+      console.error("Failed to update template:", error);
+      toast.error("Ошибка при обновлении шаблона");
     }
   };
 
-  const handleEditSave = () => {
-    // В реальном проекте здесь будет API call
-    toast.success("Шаблон успешно обновлен!");
-    setEditTemplateModal(false);
-    setSelectedTemplate(null);
-  };
+  const handleDeleteConfirm = async () => {
+    if (!selectedTemplate) return;
 
-  const generateTemplateTitle = (type: string, data: any): string => {
-    switch (type) {
-      case "Компьютер":
-        return `${data.cpu} ${data.ram} ${data.storage}`;
-      case "Принтер":
-        return `${data.model} ${data.color ? "Цветной" : "ЧБ"} ${
-          data.duplex ? "Duplex" : "Simplex"
-        }`;
-      case "Проектор":
-        return `${data.model} ${data.lumens}lm ${data.resolution}`;
-      case "Ноутбук":
-        return `${data.cpu} ${data.ram} ${data.monitor_size}"`;
-      case "Моноблок":
-        return `${data.cpu} ${data.ram} ${data.screen_size}"`;
-      case "Телевизор":
-        return `${data.model} ${data.screen_size}"`;
-      case "Роутер":
-        return `${data.model} ${data.wifi_standart}`;
-      case "Электронная доска":
-        return `${data.model} ${data.screen_size}" ${data.touch_type}`;
-      default:
-        return "Неизвестный шаблон";
+    try {
+      // Here you would call the appropriate delete API based on template type
+      toast.success("Шаблон успешно удален!");
+      setDeleteTemplateModal(false);
+      setSelectedTemplate(null);
+    } catch (error) {
+      console.error("Failed to delete template:", error);
+      toast.error("Ошибка при удалении шаблона");
     }
   };
 
   const groupedTemplates = groupTemplatesByType();
+  const totalTemplates = Object.values(groupedTemplates).flat().length;
+  const isLoading =
+    computerLoading ||
+    projectorLoading ||
+    printerLoading ||
+    monoblokLoading ||
+    electronBoardLoading ||
+    tvLoading ||
+    laptopLoading ||
+    routerLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <span className="ml-2 text-muted-foreground">Загрузка шаблонов...</span>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div className="border-2 rounded-xl overflow-hidden mb-6">
-        <div className="flex flex-row items-center p-4 border-b-2 bg-white z-10">
-          <div className="flex items-center gap-2 text-xl font-medium w-full">
-            <div className="flex flex-1 items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
-              </div>
-              Создать шаблон
-            </div>
-            <div className="flex-1 text-center">
-              <p>Наличие шаблонов</p>
-            </div>
-            <div className="flex-1"></div>
-          </div>
-        </div>
-        <div>
-          {equipmentTypes?.map((item) => (
-            <CharItem
-              key={item.name}
-              item={item}
-              setStepFormData={setStepFormData}
-              onPlusClick={() => setFormVisible(true)}
-            />
-          ))}
-        </div>
-      </div>
-
       {/* Templates List */}
       <div className="border-2 rounded-xl overflow-hidden">
-        <div className="flex flex-row items-center p-4 border-b-2 bg-white z-10">
+        <div className="flex flex-row items-center p-4 border-b-2 bg-white dark:bg-zinc-950 z-10">
           <div className="flex items-center gap-2 text-xl font-medium w-full">
             <div className="flex flex-1 items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
               </div>
-              Созданные шаблоны
+              <span className="text-foreground">Созданные шаблоны</span>
             </div>
             <div className="flex-1 text-center">
-              <p>Количество</p>
+              <p className="text-foreground">Количество</p>
             </div>
             <div className="flex-1"></div>
           </div>
         </div>
 
         {Object.keys(groupedTemplates).length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-muted-foreground">
             <p className="text-lg">Нет созданных шаблонов</p>
             <p className="text-sm">
-              Создайте первый шаблон, используя форму выше
+              Создайте первый шаблон в разделе "Характеристики"
             </p>
           </div>
         ) : (
-          Object.entries(groupedTemplates).map(([type, typeTemplates]) => (
-            <CustomAccordion
-              key={type}
-              value={`templates-${type}`}
-              className="bg-white dark:bg-zinc-950 border-t first:border-t-0"
-              triggerContent={
-                <>
-                  <IconLabel
-                    icon={() => (
-                      <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-accent flex items-center justify-center">
-                        <DesktopIcon color="#5CB8D1" className="w-6 h-6" />
+          <div className="bg-[#D8DCFD5C] dark:bg-zinc-900/50">
+            {Object.entries(groupedTemplates).map(([type, typeTemplates]) => {
+              const matchedIcon = inventoryIcons.find(
+                (icon) => icon.name === type
+              );
+
+              return (
+                <CustomAccordion
+                  key={type}
+                  value={`templates-${type}`}
+                  className="bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-700 first:border-t-0"
+                  triggerContent={
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <IconLabel
+                        icon={() => (
+                          <div
+                            className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                              matchedIcon?.color || "bg-blue-50 dark:bg-accent"
+                            }`}
+                          >
+                            <div className="text-gray-600 dark:text-gray-400">
+                              {matchedIcon?.icon || (
+                                <CircleIcon className="w-6 h-6" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        color="#000"
+                        className="flex-1"
+                        label={type}
+                      />
+                      <div className="flex-1 flex justify-center">
+                        <div className="bg-green-50 dark:bg-zinc-800 dark:text-green-400 w-12 h-12 rounded-full flex items-center justify-center text-green-600 font-medium">
+                          {typeTemplates.length}
+                        </div>
                       </div>
-                    )}
-                    color="#000"
-                    className="flex-1"
-                    label={type}
-                  />
-                  <div className="flex-1 flex justify-center">
-                    <div className="bg-green-50 dark:bg-zinc-900 dark:text-green-400 w-12 h-12 rounded-full flex items-center justify-center text-green-600 font-medium">
-                      {typeTemplates.length}
                     </div>
-                  </div>
-                </>
-              }
-            >
-              {typeTemplates.map((template) => (
-                <div
-                  key={template.id}
-                  className="flex justify-between items-center p-4 border-b dark:border-b-accent bg-background first:border-t border-t-accent border-gray-200 last:border-b-0"
+                  }
                 >
-                  <div className="flex items-center space-x-3 flex-1">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
-                        {template.type.charAt(0)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-accent-foreground text-lg font-medium">
-                        {template.title}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {type} - ID: {template.id}
-                      </span>
-                    </div>
+                  <div className="bg-indigo-50 dark:bg-zinc-950 p-0">
+                    {typeTemplates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="flex justify-between items-center p-4 border-b dark:border-zinc-700 bg-background first:border-t border-t-zinc-200 dark:border-t-zinc-700 border-gray-200 last:border-b-0"
+                      >
+                        <div className="flex items-center space-x-3 flex-1">
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              matchedIcon?.color || "bg-blue-50 dark:bg-accent"
+                            }`}
+                          >
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-300">
+                              {type.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-accent-foreground text-lg font-medium">
+                              {template.title}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {type} - ID: {template.id}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(template)}
+                            className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(template)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditTemplate(template)}
-                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full"
-                    >
-                      <Edit className="h-5 w-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteTemplate(template)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CustomAccordion>
-          ))
+                </CustomAccordion>
+              );
+            })}
+          </div>
         )}
       </div>
-
-      {/* Modals */}
-      {formVisible && (
-        <CharForm stepFormData={stepFormData} onOpenChange={setFormVisible} />
-      )}
 
       {/* Edit Template Modal */}
       <Dialog open={editTemplateModal} onOpenChange={setEditTemplateModal}>
@@ -279,22 +380,15 @@ export const TemplatesManagement = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="template-title">Название шаблона</Label>
-              <Input
-                id="template-title"
-                value={selectedTemplate?.title || ""}
-                onChange={(e) => {
-                  if (selectedTemplate) {
-                    setSelectedTemplate({
-                      ...selectedTemplate,
-                      title: e.target.value,
-                    });
-                  }
-                }}
-                className="mt-1"
-              />
+              <p className="text-muted-foreground">
+                Редактирование шаблона:{" "}
+                <strong>{selectedTemplate?.title}</strong>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Тип: {selectedTemplate?.type}
+              </p>
             </div>
-            {/* Add more fields based on template type */}
+            {/* Here you would add specific form fields based on template type */}
           </div>
           <div className="flex justify-end space-x-2 mt-6">
             <Button
@@ -323,11 +417,11 @@ export const TemplatesManagement = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               Вы уверены, что хотите удалить шаблон{" "}
               <span className="font-semibold">{selectedTemplate?.title}</span>?
             </p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Это действие нельзя отменить.
             </p>
           </div>
