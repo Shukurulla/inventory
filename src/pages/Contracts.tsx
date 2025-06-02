@@ -181,7 +181,7 @@ const ContractsWithEditPage = () => {
           <div className="flex-1 px-4">
             <button
               onClick={() => setCreateModalOpen(true)}
-              className="h-20 mb-4 rounded-lg border-dashed border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 w-full flex items-center justify-center text-indigo-500 text-xl"
+              className="h-20 contract mb-4 rounded-lg border-dashed border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 w-full flex items-center justify-center text-indigo-500 text-xl"
             >
               <PlusIcon className="w-6 h-6" /> Добавить новый договор
             </button>
@@ -196,7 +196,7 @@ const ContractsWithEditPage = () => {
             </div>
 
             <div className="space-y-4 mt-5">
-              <div className="bg-white rounded-lg border flex flex-col">
+              <div className=" rounded-lg border flex flex-col">
                 <div className="flex items-center justify-between border-b p-3 w-full">
                   <div className="flex flex-1 items-center space-x-3">
                     <VueSaxIcon className="w-5 h-5" />

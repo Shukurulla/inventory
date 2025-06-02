@@ -338,13 +338,6 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
       </div>
 
       {/* Debug info */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-          <p>Debug: Room ID = {stepFormData.roomId}</p>
-          <p>Debug: Equipment Type = {EQUIPMENT_TYPES[stepFormData.id]}</p>
-          <p>Debug: Step = {step}</p>
-        </div>
-      )}
     </div>
   );
 };

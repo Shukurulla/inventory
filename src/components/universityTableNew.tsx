@@ -95,8 +95,6 @@ export function UniversityTable() {
   const [selectedEquipment, setSelectedEquipment] = useState<Tequipment | null>(
     null
   );
-  const [selectedEquipmentType, setSelectedEquipmentType] =
-    useState<TEquipmnetTypesRoom | null>(null);
 
   // Edit form data
   const [editFormData, setEditFormData] = useState({
@@ -440,7 +438,6 @@ export function UniversityTable() {
                 onClick={(e) => {
                   e.stopPropagation();
                   if (selectedRoomId) {
-                    setSelectedEquipmentType(equipmentType);
                     setShowModal(true);
                   }
                 }}

@@ -177,16 +177,16 @@ const SettingsPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-4">
                 {/* Light Theme Card */}
                 <div
-                  className={`border border-border bg-white rounded-lg p-4 flex flex-col items-center justify-center text-black cursor-pointer transition-all hover:shadow-md ${
+                  className={`border border-border bg-white rounded-lg p-4 flex flex-col items-center justify-center  cursor-pointer transition-all hover:shadow-md ${
                     theme === "light" ? "ring-2 ring-indigo-500" : ""
                   }`}
                   onClick={() => handleThemeChange("light")}
                 >
                   <div className="flex items-center gap-2">
                     <LogoIcon width={25} />
-                    <span className="font-medium">iMaster</span>
+                    <i className="font-medium contain text-[#010]">iMaster</i>
                   </div>
-                  <span className="text-gray-600 text-sm mt-2">Светлый</span>
+                  <i className="text-[#010] text-sm mt-2">Светлый</i>
                 </div>
 
                 {/* System Theme Card */}
@@ -216,9 +216,9 @@ const SettingsPage: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <LogoIcon width={25} color="#fff" />
-                    <span className="font-medium">iMaster</span>
+                    <span className="font-medium text-white">iMaster</span>
                   </div>
-                  <span className="text-gray-400 text-sm mt-2">Тёмный</span>
+                  <span className="text-white text-sm mt-2">Тёмный</span>
                 </div>
               </div>
             </div>

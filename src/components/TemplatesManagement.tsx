@@ -1,7 +1,6 @@
 // src/components/TemplatesManagement.tsx - Updated with Edit Forms
 import { useState } from "react";
 import {
-  useGetEquipmentTypesQuery,
   useGetSpecComputerQuery,
   useGetSpecProjectorQuery,
   useGetPrinterSpecsQuery,
@@ -40,17 +39,7 @@ import { ElectronBoardForm } from "./ElectronicBoardForm";
 import { TvForm } from "./TvForm";
 import { LaptopForm } from "./LaptopForm";
 import { RouterForm } from "./RouterForm";
-import type {
-  TCompSpecifications,
-  ProjectorSpecs,
-  PrinterSpecs,
-  MonoblokSpecs,
-  ElectronBoardSpecs,
-  TVSpecs,
-  LaptopSpecs,
-  RouterSpecs,
-  createEquipmentBodyType,
-} from "@/types";
+import type { createEquipmentBodyType } from "@/types";
 
 interface EquipmentIcons {
   icon: JSX.Element;
@@ -420,7 +409,6 @@ export const TemplatesManagement = () => {
   };
 
   const groupedTemplates = groupTemplatesByType();
-  const totalTemplates = Object.values(groupedTemplates).flat().length;
   const isLoading =
     computerLoading ||
     projectorLoading ||

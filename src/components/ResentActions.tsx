@@ -27,7 +27,7 @@ interface RecentActionsProps {
 export function RecentActionsAPI({ className }: RecentActionsProps) {
   const [actions, setActions] = useState<RecentAction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const error = null;
 
   useEffect(() => {
     fetchRecentActions();

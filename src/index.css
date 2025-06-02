@@ -1,10 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
 @custom-variant dark (&:is(.dark *));
+body {
+  width: 100%;
+  height: 100vh;
+  overflow-y: hidden;
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -123,28 +127,28 @@
 }
 
 @font-face {
-  font-family: 'SF Pro Display';
-  src: url('../public/fonts/SFPRODISPLAYREGULAR.OTF') format('opentype');
+  font-family: "SF Pro Display";
+  src: url("../public/fonts/SFPRODISPLAYREGULAR.OTF") format("opentype");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'SF Pro Display';
-  src: url('../public/fonts/SFPRODISPLAYMEDIUM.OTF') format('opentype');
+  font-family: "SF Pro Display";
+  src: url("../public/fonts/SFPRODISPLAYMEDIUM.OTF") format("opentype");
   font-weight: 500;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'SF Pro Display';
-  src: url('../public/fonts/SFPRODISPLAYBOLD.OTF') format('opentype');
+  font-family: "SF Pro Display";
+  src: url("../public/fonts/SFPRODISPLAYBOLD.OTF") format("opentype");
   font-weight: 700;
   font-style: normal;
 }
 
 body {
-  font-family: 'SF Pro Display', sans-serif;
+  font-family: "SF Pro Display", sans-serif;
   color: #333333;
   line-height: normal;
 }
@@ -153,14 +157,262 @@ body {
   overflow: hidden;
 }
 .gradient-fix::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to right, white 50%, #1A1A1A 50%);
+  background: linear-gradient(to right, white 50%, #1a1a1a 50%);
   z-index: -1;
   border-radius: inherit;
 }
 
+/* GLOBAL TEXT COLOR FIXES FOR DARK MODE WITH !IMPORTANT */
+
+/* Light mode text colors */
+:root h1,
+:root h2,
+:root h3,
+:root h4,
+:root h5,
+:root h6 {
+  color: #0f172a !important;
+}
+
+:root p,
+:root span,
+:root div,
+:root label,
+:root td,
+:root th,
+:root li,
+:root a {
+  color: #334155 !important;
+}
+
+/* Dark mode text colors */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #f8fafc !important;
+}
+
+.dark .contract {
+  background: #1a1a1a;
+}
+.dark
+  .Toastify__toast-container.Toastify__toast-container--top-right
+  .Toastify__toast.Toastify__toast-theme--light {
+  background: #1a1a1a !important;
+  border: 1px solid #252525;
+}
+
+i {
+  font-style: normal;
+}
+.dark p,
+.dark span,
+.dark div,
+.dark label,
+.dark td,
+.dark th,
+.dark li,
+.dark a {
+  color: #e2e8f0 !important;
+}
+
+/* Muted text for both modes */
+:root .text-muted,
+:root .text-gray-500,
+:root .text-gray-600 {
+  color: #64748b !important;
+}
+
+.dark .text-muted,
+.dark .text-gray-500,
+.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+/* Button text colors */
+:root button {
+  color: inherit !important;
+}
+
+.dark button {
+  color: inherit !important;
+}
+
+/* Input and form elements */
+:root input,
+:root textarea,
+:root select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  color: #f8fafc !important;
+  background-color: #1a1a1a !important;
+}
+
+/* Placeholder text */
+:root input::placeholder,
+:root textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Navigation and sidebar text */
+:root nav a,
+:root nav span,
+:root nav div {
+  color: #475569 !important;
+}
+
+.dark nav a,
+.dark nav span,
+.dark nav div {
+  color: #cbd5e1 !important;
+}
+.dark .px-2.py-1.rounded-full.text-xs.font-medium {
+  color: #334155 !important;
+}
+
+/* Card content */
+:root .card,
+:root .bg-white {
+  color: #1a1a1a !important;
+}
+
+.dark .card,
+.dark .bg-white {
+  color: #f1f5f9 !important;
+}
+
+/* Table content */
+:root table,
+:root tbody,
+:root thead {
+  color: #334155 !important;
+}
+
+.dark table,
+.dark tbody,
+.dark thead {
+  color: #e2e8f0 !important;
+}
+
+/* Border colors for dark mode */
+.dark .border,
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #374151 !important;
+}
+
+/* Background colors for containers */
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background-color: #1f2937 !important;
+}
+
+/* Specific overrides for common text classes */
+.dark .text-black {
+  color: #f8fafc !important;
+}
+
+.dark .text-gray-800,
+.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+.dark .flex.flex-row.items-center.p-4.border-b-2.bg-white.z-10 {
+  background: #1a1a1a;
+}
+.dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+.dark .text-gray-600 {
+  color: #d1d5db !important;
+}
+
+.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+/* Ensure indigo colors stay consistent */
+:root .text-indigo-600,
+.dark .text-indigo-600 {
+  color: #4f46e5 !important;
+}
+
+:root .text-indigo-500,
+.dark .text-indigo-500 {
+  color: #6366f1 !important;
+}
+
+/* White text should stay white in both modes for buttons */
+:root .text-white,
+.dark .text-white {
+  color: #ffffff !important;
+}
+
+/* Status colors that should remain consistent */
+:root .text-green-600,
+.dark .text-green-600 {
+  color: #059669 !important;
+}
+
+:root .text-red-600,
+.dark .text-red-600 {
+  color: #dc2626 !important;
+}
+
+:root .text-yellow-600,
+.dark .text-yellow-600 {
+  color: #d97706 !important;
+}
+
+:root .text-blue-600,
+.dark .text-blue-600 {
+  color: #2563eb !important;
+}
+
+/* Override any conflicting classes */
+.dark * {
+  border-color: #374151;
+}
+
+.dark .bg-background {
+  background-color: #1a1a1a !important;
+}
+
+.dark .text-foreground {
+  color: #f8fafc !important;
+}
+
+.dark .text-accent-foreground {
+  color: #f8fafc !important;
+}
+
+.dark .text-muted-foreground {
+  color: #94a3b8 !important;
+}
+
+.dark .text-card-foreground {
+  color: #f8fafc !important;
+}

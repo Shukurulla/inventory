@@ -1,11 +1,8 @@
-// src/components/InventoryModal.tsx - TanStack Query Fix
 import { useState } from "react";
 import InventoryItem from "./InventoryItem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { useGetEquipmentTypesQuery } from "@/api/universityApi";
 import StepForm from "./CreateInventoryForm";
-import { useQueryClient } from "@tanstack/react-query";
-
 interface InventoryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,45 +22,10 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
     roomId: roomId,
   });
 
-  const queryClient = useQueryClient();
-
   function handleModal() {
     onOpenChange(!open);
     setStepFormVisible(false);
-    // Reset form data when modal closes
-    setStepFormData({
-      name: "",
-      id: 0,
-      roomId: roomId,
-    });
   }
-
-  // Handle form completion and modal close
-  const handleFormComplete = (isOpen: boolean) => {
-    if (!isOpen) {
-      // Form completed successfully, close entire modal
-      setStepFormVisible(false);
-      onOpenChange(false);
-
-      // Invalidate and refetch all related queries
-      queryClient.invalidateQueries({
-        queryKey: ["equipmentsTypesRoom", roomId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["blocks"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["rooms"],
-      });
-
-      // Force refetch with a small delay
-      setTimeout(() => {
-        queryClient.refetchQueries({
-          queryKey: ["equipmentsTypesRoom", roomId],
-        });
-      }, 500);
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={handleModal}>
@@ -84,17 +46,16 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                   key={index}
                   item={item}
                   roomId={roomId}
-                  setStepFormData={(data) => {
-                    console.log("Setting step form data:", data);
-                    setStepFormData(data);
-                  }}
-                  onPlusClick={() => {
-                    console.log("Plus clicked, showing step form");
-                    setStepFormVisible(true);
-                  }}
+                  setStepFormData={setStepFormData}
+                  onPlusClick={() => setStepFormVisible(true)}
                 />
               ))}
             </div>
+          </div>
+        )}
+        {stepFormVisible && (
+          <div>
+            <StepForm stepFormData={stepFormData} onOpenChange={onOpenChange} />
           </div>
         )}
       </DialogContent>

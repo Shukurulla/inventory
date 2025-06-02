@@ -8,7 +8,9 @@ import type {
   TInventory,
   TEquipmnetTypesRoom,
   EquipmentTypes,
+  Tequipment,
 } from "@/types";
+import { EQUIPMENT_TYPES } from "@/types";
 
 const api = axios.create({
   baseURL: "https://invenmaster.pythonanywhere.com/",
@@ -17,9 +19,6 @@ const api = axios.create({
   },
 });
 
-type MapType = {
-  room: number;
-};
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -112,16 +111,38 @@ export const universityApi = {
     }
   },
 
+  // FIXED: Group equipment by type for specific room
   getEquipmentsTypesRoom: async (
     roomId: number
   ): Promise<TEquipmnetTypesRoom[]> => {
     try {
       const response = await api.get(`inventory/equipment/my-equipments/`);
+
+      // Filter equipment for the specific room
       const equipmentsForRoom = response.data.filter(
-        (c: MapType) => c.room == roomId
+        (equipment: Tequipment) => equipment.room === roomId
       );
 
-      return equipmentsForRoom;
+      // Group equipment by type
+      const groupedEquipment: TEquipmnetTypesRoom[] = [];
+
+      // Iterate through all equipment types
+      Object.entries(EQUIPMENT_TYPES).forEach(([typeId, typeName]) => {
+        const equipmentOfType = equipmentsForRoom.filter(
+          (equipment: Tequipment) => equipment.type === parseInt(typeId)
+        );
+
+        // Only add to result if there are equipment of this type
+        if (equipmentOfType.length > 0) {
+          groupedEquipment.push({
+            name: typeName,
+            items: equipmentOfType,
+          });
+        }
+      });
+
+      console.log("Grouped equipment for room", roomId, ":", groupedEquipment);
+      return groupedEquipment;
     } catch (error) {
       console.error("Jihoz turlarini olishda xato:", error);
       throw error;
