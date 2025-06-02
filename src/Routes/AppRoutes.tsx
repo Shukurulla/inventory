@@ -5,28 +5,33 @@ import ProtectedRoute from "./ProtectedRoute";
 import ContractsPage from "@/pages/Contracts";
 import { Characteristics } from "@/pages/Characteristics";
 import SettingsPage from "@/pages/Settings";
+import AddedEquipmentPage from "@/pages/AddedEquipmentsPage";
 
 const AppRoutes = () => {
   const appRoutes = useRoutes([
     {
-      path: '/',
+      path: "/",
       element: (
-        <ProtectedRoute allowedRoles={['']}>
-          <MainPage/>
+        <ProtectedRoute allowedRoles={[""]}>
+          <MainPage />
         </ProtectedRoute>
       ),
     },
     {
-      path: '/contracts',
-      element: <ContractsPage/>,
+      path: "/contracts",
+      element: <ContractsPage />,
     },
     {
-      path: '/characteristics',
-      element: <Characteristics/>,
+      path: "/characteristics",
+      element: <Characteristics />,
     },
     {
-      path: '/settings',
-      element: <SettingsPage/>,
+      path: "/addeds",
+      element: <AddedEquipmentPage />,
+    },
+    {
+      path: "/settings",
+      element: <SettingsPage />,
     },
     { path: "/login", element: <Login /> },
   ]);

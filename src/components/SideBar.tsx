@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 const NAV_KEY = "active_nav";
 
 export function Sidebar() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState<string>(() => {
     return localStorage.getItem(NAV_KEY) || "Главная страница";
   });
@@ -34,35 +34,50 @@ export function Sidebar() {
         </div>
         <nav className="flex-1 p-4 space-y-1">
           <NavItem
-            icon={<HomeIcon width={22}/>}
+            icon={<HomeIcon width={22} />}
             label="Главная страница"
             active={activeNav === "Главная страница"}
-            onClick={() => {navigate('/'); handleNavClick('Главная страница')}}
+            onClick={() => {
+              navigate("/");
+              handleNavClick("Главная страница");
+            }}
           />
           <NavItem
-            icon={<Characteristics width={24} className="scale-115"/>}
+            icon={<Characteristics width={24} className="scale-115" />}
             label="Характеристики"
             active={activeNav === "Характеристики"}
-            onClick={() => {navigate('/characteristics'); handleNavClick("Характеристики")}}
+            onClick={() => {
+              navigate("/characteristics");
+              handleNavClick("Характеристики");
+            }}
           />
           <NavItem
             icon={<SavedIcon width={24} height={24} />}
             label="Договоры"
             active={activeNav === "Договоры"}
-            onClick={() => {navigate('/contracts'); handleNavClick('Договоры')}}
+            onClick={() => {
+              navigate("/contracts");
+              handleNavClick("Договоры");
+            }}
           />
           <NavItem
             icon={<LayersIcon width={24} height={24} />}
             label="Добавленные"
             badge="67"
             active={activeNav === "Добавленные"}
-            onClick={() => {handleNavClick("Добавленные")}}
+            onClick={() => {
+              navigate("/addeds");
+              handleNavClick("Добавленные");
+            }}
           />
           <NavItem
             icon={<SettingsIcon width={24} height={24} />}
             label="Настройки"
             active={activeNav === "Настройки"}
-            onClick={() => {navigate('/settings'); handleNavClick("Настройки")}}
+            onClick={() => {
+              navigate("/settings");
+              handleNavClick("Настройки");
+            }}
           />
         </nav>
         <div className="p-3 flex items-center justify-center w-full">
@@ -102,7 +117,13 @@ function NavItem({ icon, label, badge, active, onClick }: NavItemProps) {
       {icon}
       <span className="flex-1">{label}</span>
       {badge && (
-        <span className={`text-sm ${active ? 'bg-indigo-100 dark:bg-indigo-400/10' : 'bg-gray-200 dark:bg-zinc-800 text-primary'}  w-7 h-7 flex items-center justify-center rounded-full`}>
+        <span
+          className={`text-sm ${
+            active
+              ? "bg-indigo-100 dark:bg-indigo-400/10"
+              : "bg-gray-200 dark:bg-zinc-800 text-primary"
+          }  w-7 h-7 flex items-center justify-center rounded-full`}
+        >
           {badge}
         </span>
       )}
