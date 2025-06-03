@@ -46,9 +46,6 @@ export const TvForm: React.FC<createFormPropsType> = ({
       setEquipmentFormData((prev) => ({
         ...prev,
         tv_specification_id: Number(templateId),
-      }));
-      setEquipmentFormData((prev) => ({
-        ...prev,
         tv_char: null,
       }));
     } else {
@@ -62,8 +59,14 @@ export const TvForm: React.FC<createFormPropsType> = ({
 
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
+    console.log("TV: Submit clicked");
+    console.log("TV: create =", create);
+    console.log("TV: onOpenChange =", onOpenChange);
+    console.log("TV: formData =", formData);
+
     if (create && onOpenChange) {
       try {
+        console.log("TV: Calling API with data:", formData);
         await createSpecTv(formData).unwrap();
         toast.success("Спецификация телевизора успешно добавлена!");
         setFormData({
@@ -72,11 +75,81 @@ export const TvForm: React.FC<createFormPropsType> = ({
         });
         onOpenChange(false);
       } catch (error) {
+        console.error("TV: API error:", error);
         errorValidatingWithToast(error);
       }
     }
   };
 
+  if (create && onOpenChange) {
+    // CREATE MODE: Show full form with input fields
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="tv-model">Модель телевизора</Label>
+            <Input
+              id="tv-model"
+              placeholder="Samsung UE55AU7100U"
+              value={formData.model}
+              onChange={(e) =>
+                setFormData({ ...formData, model: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="tv-size">Размер экрана (дюймы)</Label>
+            <Input
+              id="tv-size"
+              type="number"
+              placeholder="55"
+              value={formData.screen_size || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  screen_size: parseFloat(e.target.value) || null,
+                })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="tv-serial">Серийный номер</Label>
+            <Input
+              id="tv-serial"
+              placeholder="Серийный номер"
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-6 gap-x-2">
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={() => onOpenChange(false)}
+          >
+            Отменить
+          </Button>
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={(e) => handleSubmit(e)}
+            disabled={!formData.model || !formData.screen_size}
+          >
+            {isLoading ? (
+              <Loader2 className="animate animate-spin" />
+            ) : (
+              "Создать шаблон"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MODE: Template selection + quantity (for equipment creation)
   return (
     <form className="">
       {!create && (
@@ -108,7 +181,7 @@ export const TvForm: React.FC<createFormPropsType> = ({
             <Input
               id="quantity"
               placeholder="Введите..."
-              className="focus:ring-indigo-600 h-12 focus:border-indigo-600"
+              className="focus:ring-indigo-600 h-12 text-accent-foreground focus:border-indigo-600"
               value={equipmentFormData.count}
               onChange={(e) =>
                 setEquipmentFormData({
@@ -118,24 +191,6 @@ export const TvForm: React.FC<createFormPropsType> = ({
               }
             />
           </div>
-        </div>
-      )}
-      {onOpenChange && create && (
-        <div className="flex justify-between mt-6 gap-x-2">
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
-            onClick={(e) => handleSubmit(e)}
-          >
-            {isLoading ? <Loader2 className="animate animate-spin" /> : "Далее"}
-          </Button>
         </div>
       )}
     </form>

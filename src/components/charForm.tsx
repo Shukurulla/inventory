@@ -304,15 +304,16 @@ const CharForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
   };
 
   const renderForm = () => {
-    const equipmentType = EQUIPMENT_TYPES[stepFormData.id];
+    const equipmentType = stepFormData.name; // Bu muhim o'zgarish
     console.log("Rendering form for:", equipmentType, "ID:", stepFormData.id);
+    console.log("Props being passed:", { create: true, onOpenChange });
 
     switch (equipmentType) {
       case "Компьютер":
         return (
           <DesktopForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
@@ -321,7 +322,7 @@ const CharForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
         return (
           <ProjectorAddForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
@@ -330,7 +331,7 @@ const CharForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
         return (
           <PrinterForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
@@ -339,43 +340,56 @@ const CharForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
         return (
           <MonoBlokForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
         );
       case "Электронная доска":
+        console.log("ElectronicBoard: Rendering with props", {
+          create: true,
+          onOpenChange,
+        });
         return (
           <ElectronBoardForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
         );
       case "Телевизор":
+        console.log("TV: Rendering with props", { create: true, onOpenChange });
         return (
           <TvForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
         );
       case "Ноутбук":
+        console.log("Laptop: Rendering with props", {
+          create: true,
+          onOpenChange,
+        });
         return (
           <LaptopForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />
         );
       case "Роутер":
+        console.log("Router: Rendering with props", {
+          create: true,
+          onOpenChange,
+        });
         return (
           <RouterForm
             onOpenChange={onOpenChange}
-            create
+            create={true}
             equipmentFormData={equipmentFormData}
             setEquipmentFormData={setEquipmentFormData}
           />

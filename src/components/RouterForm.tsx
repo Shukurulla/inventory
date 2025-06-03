@@ -47,10 +47,7 @@ export const RouterForm: React.FC<createFormPropsType> = ({
       setEquipmentFormData((prev) => ({
         ...prev,
         router_specification_id: Number(templateId),
-      }));
-      setEquipmentFormData((prev) => ({
-        ...prev,
-        notebook_char: null,
+        router_char: null,
       }));
     } else {
       setEquipmentFormData((prev) => ({
@@ -60,10 +57,17 @@ export const RouterForm: React.FC<createFormPropsType> = ({
       }));
     }
   };
+
   const handleSubmit = async (e: React.MouseEvent) => {
     e.preventDefault();
+    console.log("Router: Submit clicked");
+    console.log("Router: create =", create);
+    console.log("Router: onOpenChange =", onOpenChange);
+    console.log("Router: formData =", formData);
+
     if (create && onOpenChange) {
       try {
+        console.log("Router: Calling API with data:", formData);
         await createSpecRouter(formData).unwrap();
         toast.success("Спецификация роутера успешно добавлена!");
         setFormData({
@@ -73,11 +77,101 @@ export const RouterForm: React.FC<createFormPropsType> = ({
         });
         onOpenChange(false);
       } catch (error) {
+        console.error("Router: API error:", error);
         errorValidatingWithToast(error);
       }
     }
   };
 
+  if (create && onOpenChange) {
+    // CREATE MODE: Show full form with input fields
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="router-model">Модель роутер</Label>
+            <Input
+              id="router-model"
+              placeholder="TP-Link Archer AX6000"
+              value={formData.model}
+              onChange={(e) =>
+                setFormData({ ...formData, model: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="router-ports">Количество портов</Label>
+            <Input
+              id="router-ports"
+              type="number"
+              placeholder="8"
+              value={formData.ports || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  ports: parseInt(e.target.value) || null,
+                })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="router-wifi">Стандарт Wi-Fi</Label>
+            <Select
+              value={formData.wifi_standart}
+              onValueChange={(value) =>
+                setFormData({ ...formData, wifi_standart: value })
+              }
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Выберите WiFi стандарт" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="802.11n">802.11n (2.4 GHz)</SelectItem>
+                <SelectItem value="802.11ac">802.11ac (5 GHz)</SelectItem>
+                <SelectItem value="802.11ax">802.11ax (WiFi 6)</SelectItem>
+                <SelectItem value="802.11be">802.11be (WiFi 7)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="router-serial">Серийный номер</Label>
+            <Input
+              id="router-serial"
+              placeholder="Серийный номер"
+              className="mt-1"
+            />
+          </div>
+          <div></div>
+        </div>
+
+        <div className="flex justify-between mt-6 gap-x-2">
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={() => onOpenChange(false)}
+          >
+            Отменить
+          </Button>
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={(e) => handleSubmit(e)}
+            disabled={!formData.model || !formData.wifi_standart}
+          >
+            {isLoading ? (
+              <Loader2 className="animate animate-spin" />
+            ) : (
+              "Создать шаблон"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MODE: Template selection + quantity (for equipment creation)
   return (
     <form className="">
       {!create && (
@@ -109,7 +203,7 @@ export const RouterForm: React.FC<createFormPropsType> = ({
             <Input
               id="quantity"
               placeholder="Введите..."
-              className="focus:ring-indigo-600 h-12 focus:border-indigo-600"
+              className="focus:ring-indigo-600 h-12 text-accent-foreground focus:border-indigo-600"
               value={equipmentFormData.count}
               onChange={(e) =>
                 setEquipmentFormData({
@@ -119,24 +213,6 @@ export const RouterForm: React.FC<createFormPropsType> = ({
               }
             />
           </div>
-        </div>
-      )}
-      {onOpenChange && create && (
-        <div className="flex justify-between mt-6 gap-x-2">
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
-            onClick={(e) => handleSubmit(e)}
-          >
-            {isLoading ? <Loader2 className="animate animate-spin" /> : "Далее"}
-          </Button>
         </div>
       )}
     </form>
