@@ -1,3 +1,4 @@
+// src/types.ts - Fixed version with complete types
 export interface LoginRequest {
   username: string;
   password: string;
@@ -32,11 +33,13 @@ export type TUniversity = {
   id: number;
   name: string;
   address: string;
+  logo?: string | null;
 };
+
 export type TBlock = {
   id: number;
   name: string;
-  photo: string;
+  photo: string | null;
   university: number;
   address: string;
 };
@@ -51,18 +54,19 @@ export type TFloor = {
 export type TFaculty = {
   id: number;
   name: string;
-  photo: string;
+  photo: string | null;
   building: number;
   floor: number;
 };
+
 export interface TRoom {
   id: number;
   number: string;
   name: string;
   is_special: boolean;
   photo: string | null;
-  qr_code: string;
-  qr_code_url: string;
+  qr_code?: string;
+  qr_code_url?: string;
   floor: number;
   building: number;
   derived_from: number | null;
@@ -80,77 +84,58 @@ export interface TAuthor {
   role: string;
 }
 
-// export interface TInventory {
-//   id: number;
-//   type: number;
-//   type_data: {
-//     id: number;
-//     name: string;
-//     requires_computer_details: boolean;
-//   };
-//   room: number;
-//   room_data: TRoom;
-//   name: string;
-//   photo: string | null;
-//   description: string;
-//   is_active: boolean;
-//   contract: string | null;
-//   created_at: string;
-//   computer_details: string | null;
-//   computer_specification_data: string | null;
-//   printer_char: string | null;
-//   printer_specification_data: string | null;
-//   extender_char: string | null;
-//   extender_specification_data: string | null;
-//   router_char: string | null;
-//   router_specification_data: string | null;
-//   tv_char: string | null;
-//   tv_specification_data: string | null;
-//   status: string;
-//   qr_code_url: string;
-//   uid: string;
-//   author: TAuthor;
-// }
-
-export interface Tequipment{
+export interface Tequipment {
   id: number;
   type: number;
-  type_data: {
+  type_data?: {
     id: number;
     name: string;
     requires_computer_details: boolean;
   };
   room: number;
-  room_data: TRoom;
+  room_data?: TRoom;
   name: string;
   photo: string | null;
   description: string;
   is_active: boolean;
-  contract: string | null;
+  contract: number | null;
   created_at: string;
+
+  // Specifications data
   computer_details: string | null;
-  computer_specification_data: string | null;
+  computer_specification_data?: any | null;
   printer_char: string | null;
-  printer_specification_data: string | null;
+  printer_specification_data?: any | null;
   extender_char: string | null;
-  extender_specification_data: string | null;
+  extender_specification_data?: any | null;
   router_char: string | null;
-  router_specification_data: string | null;
+  router_specification_data?: any | null;
   tv_char: string | null;
-  tv_specification_data: string | null;
+  tv_specification_data?: any | null;
+  notebook_char: string | null;
+  notebook_specification_data?: any | null;
+  monoblok_char: string | null;
+  monoblok_specification_data?: any | null;
+  projector_char: string | null;
+  projector_specification_data?: any | null;
+  whiteboard_char: string | null;
+  whiteboard_specification_data?: any | null;
+
   status: string;
-  qr_code_url: string;
+  qr_code_url?: string | null;
   uid: string;
-  author: TAuthor;
-}
-export interface TInventory {
-  count?: number;
-  next?: string;
-  previus?: string;
-  results: Tequipment[]
+  inn?: number;
+  author?: TAuthor;
 }
 
-export interface TEquipmnetTypesRoom{
+export interface TInventory {
+  count?: number;
+  next?: string | null;
+  previous?: string | null;
+  results: Tequipment[];
+}
+
+export interface TEquipmnetTypesRoom {
   name: string;
   items: Tequipment[];
 }
@@ -165,18 +150,20 @@ export interface universityType {
 }
 
 export interface EquipmentTypes {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   name: string;
-  color: string;
+  color?: string;
   id: number;
-  requires_computer_details: boolean;
+  requires_computer_details?: boolean;
 }
 
 export interface createFormPropsType {
   equipmentFormData: createEquipmentBodyType;
-  setEquipmentFormData: React.Dispatch<React.SetStateAction<createEquipmentBodyType>>;
+  setEquipmentFormData: React.Dispatch<
+    React.SetStateAction<createEquipmentBodyType>
+  >;
   create?: boolean;
-  onOpenChange?: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void;
 }
 
 export interface TCompSpecifications {
@@ -206,8 +193,8 @@ export interface SetInnType {
   inn: string;
   name: string;
 }
-// Specifications for each equipment type
 
+// Specifications for each equipment type
 export interface ProjectorSpecs {
   id?: number;
   model: string;
@@ -225,7 +212,7 @@ export interface MonoblokSpecs {
   has_mouse: boolean;
   screen_size: string;
   model: string;
-  touch_type: 'infrared' | 'capacitive'
+  touch_type: "infrared" | "capacitive";
 }
 
 export interface TVSpecs {
@@ -253,13 +240,14 @@ export interface ElectronBoardSpecs {
   id?: number;
   model: string;
   screen_size: number | null;
-  touch_type: 'infrared' | 'capacitive'
+  touch_type: "infrared" | "capacitive";
 }
+
 export interface RouterSpecs {
   id?: number;
   model: string;
   ports: number | null;
-  wifi_standart: string
+  wifi_standart: string;
 }
 
 export type EquipmentSpecs =
@@ -270,7 +258,7 @@ export type EquipmentSpecs =
   | PrinterSpecs
   | LaptopSpecs
   | ElectronBoardSpecs
-  | RouterSpecs
+  | RouterSpecs;
 
 export const EQUIPMENT_TYPES: Record<number, string> = {
   1: "Проектор",
@@ -284,8 +272,8 @@ export const EQUIPMENT_TYPES: Record<number, string> = {
 };
 
 export interface createEquipmentBodyType {
-  type_id: number;
-  room_id: number;
+  type_id: number; // Required field
+  room_id: number; // Required field
   description: string;
   photo?: File;
   is_active: boolean;
@@ -294,22 +282,26 @@ export interface createEquipmentBodyType {
   contract_id: number | null;
   count: number;
   name_prefix: string;
-  computer_details: TCompSpecifications | null
-  printer_char: PrinterSpecs | null
-  extender_char: string | null
-  router_char: RouterSpecs | null
-  tv_char: TVSpecs | null
-  notebook_char: LaptopSpecs | null
-  monoblok_char: MonoblokSpecs | null
-  projector_char: ProjectorSpecs | null
-  whiteboard_char: ElectronBoardSpecs | null
-  computer_specification_id: number | null
-  printer_specification_id: number | null
-  extender_specification_id: number | null
-  router_specification_id: number | null
-  tv_specification_id: number | null
-  notebook_specification_id: number | null
-  monoblok_specification_id: number | null
-  projector_specification_id: number | null
-  whiteboard_specification_id: number | null
+
+  // Specifications objects
+  computer_details: TCompSpecifications | null;
+  printer_char: PrinterSpecs | null;
+  extender_char: any | null;
+  router_char: RouterSpecs | null;
+  tv_char: TVSpecs | null;
+  notebook_char: LaptopSpecs | null;
+  monoblok_char: MonoblokSpecs | null;
+  projector_char: ProjectorSpecs | null;
+  whiteboard_char: ElectronBoardSpecs | null;
+
+  // Specification IDs
+  computer_specification_id: number | null;
+  printer_specification_id: number | null;
+  extender_specification_id: number | null;
+  router_specification_id: number | null;
+  tv_specification_id: number | null;
+  notebook_specification_id: number | null;
+  monoblok_specification_id: number | null;
+  projector_specification_id: number | null;
+  whiteboard_specification_id: number | null;
 }

@@ -1,4 +1,6 @@
-// src/api/universityApi.ts - Updated with Full Edit Support
+// src/api/universityApi.ts - Fixed with Complete Postman Endpoints
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./Auth/BaseQueryWithReauth";
 import type {
   ElectronBoardSpecs,
   EquipmentTypes,
@@ -18,12 +20,10 @@ import type {
   TUniversity,
   TVSpecs,
 } from "@/types";
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQueryWithReauth } from "./Auth/BaseQueryWithReauth";
 
-// Equipment Update Types
+// Equipment Update Types - Complete interface based on Postman collection
 interface EquipmentUpdateRequest {
-  type?: number;
+  type: number; // Type is required
   name?: string;
   description?: string;
   status?: string;
@@ -61,6 +61,37 @@ interface EquipmentUpdateRequest {
   };
   printer_specification_id?: number | null;
 
+  // Extender specifications
+  extender_char?: {
+    ports: number;
+    length: number;
+  };
+  extender_specification_id?: number | null;
+
+  // Router specifications
+  router_char?: {
+    model: string;
+    ports: number | null;
+    wifi_standart: string;
+  };
+  router_specification_id?: number | null;
+
+  // TV specifications
+  tv_char?: {
+    model: string;
+    screen_size: number | null;
+  };
+  tv_specification_id?: number | null;
+
+  // Notebook specifications
+  notebook_char?: {
+    cpu: string;
+    ram: string;
+    storage: string;
+    monitor_size: string;
+  };
+  notebook_specification_id?: number | null;
+
   // Monoblock specifications
   monoblok_char?: {
     cpu: string;
@@ -81,30 +112,6 @@ interface EquipmentUpdateRequest {
     touch_type: "infrared" | "capacitive";
   };
   whiteboard_specification_id?: number | null;
-
-  // TV specifications
-  tv_char?: {
-    model: string;
-    screen_size: number | null;
-  };
-  tv_specification_id?: number | null;
-
-  // Laptop specifications
-  notebook_char?: {
-    cpu: string;
-    ram: string;
-    storage: string;
-    monitor_size: string;
-  };
-  notebook_specification_id?: number | null;
-
-  // Router specifications
-  router_char?: {
-    model: string;
-    ports: number | null;
-    wifi_standart: string;
-  };
-  router_specification_id?: number | null;
 }
 
 // Equipment Search and Filter Types
@@ -139,6 +146,19 @@ interface BulkInnUpdateRequest {
     id: number;
     inn: number;
   }>;
+}
+
+// Bulk Create Equipment Request Type
+interface BulkCreateEquipmentRequest {
+  type_id: number;
+  room_id: number;
+  description: string;
+  status: string;
+  contract_id: number | null;
+  count: number;
+  name_prefix: string;
+  is_active?: boolean;
+  [key: string]: any; // For various specification objects
 }
 
 // QR Scan Request Type
@@ -227,7 +247,6 @@ export const universityApi = createApi({
       query: () => `/inventory/equipment/my-equipments/`,
       providesTags: [{ type: "Equipment", id: "MY_LIST" }],
       transformResponse: (response: any) => {
-        console.log("getAddedEquipments raw response:", response);
         if (Array.isArray(response)) {
           return response;
         } else if (
@@ -240,10 +259,6 @@ export const universityApi = createApi({
           return response.data;
         }
         return [];
-      },
-      transformErrorResponse: (response: any) => {
-        console.log("getAddedEquipments error:", response);
-        return response;
       },
     }),
 
@@ -261,9 +276,12 @@ export const universityApi = createApi({
       providesTags: [{ type: "Equipment", id: "FILTERED" }],
     }),
 
-    // Equipment actions
+    // Equipment actions and history
     getMyActions: builder.query<EquipmentAction[], void>({
       query: () => `inventory/equipment/my-actions/`,
+    }),
+    getMovementHistory: builder.query<any[], void>({
+      query: () => `inventory/movement-history/`,
     }),
 
     // QR Code scanning
@@ -275,7 +293,7 @@ export const universityApi = createApi({
       }),
     }),
 
-    // Equipment specifications
+    // Equipment specifications queries
     getSpecComputer: builder.query<TCompSpecifications[], void>({
       query: () => `inventory/computer-specifications/`,
       providesTags: [{ type: "Specifications", id: "COMPUTER" }],
@@ -301,18 +319,22 @@ export const universityApi = createApi({
       providesTags: [{ type: "Specifications", id: "TV" }],
     }),
     getLaptopSpecs: builder.query<LaptopSpecs[], void>({
-      query: () => `inventory/laptop-specification/`,
+      query: () => `inventory/notebook-specification/`,
       providesTags: [{ type: "Specifications", id: "LAPTOP" }],
     }),
     getRouterSpecs: builder.query<RouterSpecs[], void>({
       query: () => `inventory/router-specification/`,
       providesTags: [{ type: "Specifications", id: "ROUTER" }],
     }),
+    getSpecificationCount: builder.query<any, void>({
+      query: () => `inventory/specifications/specification-count/`,
+      providesTags: [{ type: "Specifications", id: "COUNT" }],
+    }),
 
     // Create specification endpoints
     createSpecComputer: builder.mutation<void, TCompSpecifications>({
       query: (body) => ({
-        url: `inventory/computer-specifications/`,
+        url: `inventory/create-comp-spec/`,
         method: "POST",
         body,
       }),
@@ -360,7 +382,7 @@ export const universityApi = createApi({
     }),
     createLaptopSpecs: builder.mutation<void, LaptopSpecs>({
       query: (body) => ({
-        url: `inventory/laptop-specification/`,
+        url: `inventory/notebook-specification/`,
         method: "POST",
         body,
       }),
@@ -376,7 +398,10 @@ export const universityApi = createApi({
     }),
 
     // Equipment CRUD operations
-    bulkCreateEquipment: builder.mutation({
+    bulkCreateEquipment: builder.mutation<
+      Tequipment[],
+      BulkCreateEquipmentRequest
+    >({
       query: (body) => ({
         url: "inventory/equipment/bulk-create/",
         method: "POST",
@@ -396,8 +421,8 @@ export const universityApi = createApi({
 
         if (args.room_id) {
           tags.push(
-            { type: "EquipmentByRoom", id: args.room_id },
-            { type: "EquipmentTypesRoom", id: args.room_id }
+            { type: "EquipmentByRoom", id: args.room_id.toString() },
+            { type: "EquipmentTypesRoom", id: args.room_id.toString() }
           );
         }
 
@@ -405,7 +430,7 @@ export const universityApi = createApi({
       },
     }),
 
-    // NEW: Full equipment update (PUT method) - according to Postman
+    // Full equipment update (PUT method)
     updateEquipment: builder.mutation<
       Tequipment,
       { id: number; data: EquipmentUpdateRequest }
@@ -416,14 +441,14 @@ export const universityApi = createApi({
         body: data,
       }),
       invalidatesTags: (result, error, { id }) => [
-        { type: "Equipment", id },
+        { type: "Equipment", id: id.toString() },
         { type: "Equipment", id: "LIST" },
         { type: "Equipment", id: "MY_LIST" },
         { type: "Inventory", id: "LIST" },
       ],
     }),
 
-    // NEW: Partial equipment update (PATCH method)
+    // Partial equipment update (PATCH method)
     patchEquipment: builder.mutation<
       Tequipment,
       { id: number; data: Partial<EquipmentUpdateRequest> }
@@ -434,14 +459,14 @@ export const universityApi = createApi({
         body: data,
       }),
       invalidatesTags: (result, error, { id }) => [
-        { type: "Equipment", id },
+        { type: "Equipment", id: id.toString() },
         { type: "Equipment", id: "LIST" },
         { type: "Equipment", id: "MY_LIST" },
         { type: "Inventory", id: "LIST" },
       ],
     }),
 
-    // Bulk operations
+    // Equipment bulk operations
     bulkUpdateInn: builder.mutation<void, BulkInnUpdateRequest>({
       query: (body) => ({
         url: "/inventory/equipment/bulk-update-inn/",
@@ -464,7 +489,7 @@ export const universityApi = createApi({
         body: { status },
       }),
       invalidatesTags: (result, error, { equipmentId }) => [
-        { type: "Equipment", id: equipmentId },
+        { type: "Equipment", id: equipmentId.toString() },
         { type: "Equipment", id: "LIST" },
         { type: "Equipment", id: "MY_LIST" },
       ],
@@ -495,14 +520,14 @@ export const universityApi = createApi({
       invalidatesTags: (result, error, { to_room_id, from_room_id }) => {
         const tags = [
           { type: "Equipment", id: "LIST" },
-          { type: "EquipmentByRoom", id: to_room_id },
-          { type: "EquipmentTypesRoom", id: to_room_id },
+          { type: "EquipmentByRoom", id: to_room_id.toString() },
+          { type: "EquipmentTypesRoom", id: to_room_id.toString() },
         ];
 
         if (from_room_id) {
           tags.push(
-            { type: "EquipmentByRoom", id: from_room_id },
-            { type: "EquipmentTypesRoom", id: from_room_id }
+            { type: "EquipmentByRoom", id: from_room_id.toString() },
+            { type: "EquipmentTypesRoom", id: from_room_id.toString() }
           );
         }
 
@@ -523,10 +548,12 @@ export const universityApi = createApi({
       ],
     }),
 
-    // NEW: Individual equipment operations
+    // Individual equipment operations
     getEquipmentById: builder.query<Tequipment, number>({
       query: (id) => `/inventory/equipment/${id}/`,
-      providesTags: (result, error, id) => [{ type: "Equipment", id }],
+      providesTags: (result, error, id) => [
+        { type: "Equipment", id: id.toString() },
+      ],
     }),
 
     deleteEquipment: builder.mutation<void, number>({
@@ -535,25 +562,25 @@ export const universityApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, id) => [
-        { type: "Equipment", id },
+        { type: "Equipment", id: id.toString() },
         { type: "Equipment", id: "LIST" },
         { type: "Equipment", id: "MY_LIST" },
       ],
     }),
 
-    // NEW: Equipment repair operations (according to Postman)
+    // Equipment repair operations
     sendToRepair: builder.mutation<void, number>({
       query: (id) => ({
         url: `/inventory/equipment/${id}/send-to-repair/`,
         method: "POST",
       }),
       invalidatesTags: (result, error, id) => [
-        { type: "Equipment", id },
+        { type: "Equipment", id: id.toString() },
         { type: "Equipment", id: "LIST" },
       ],
     }),
 
-    // NEW: Equipment disposal operations (according to Postman)
+    // Equipment disposal operations
     disposeEquipment: builder.mutation<
       void,
       { id: number; reason: string; notes?: string }
@@ -564,26 +591,15 @@ export const universityApi = createApi({
         body: { reason, notes },
       }),
       invalidatesTags: (result, error, { id }) => [
-        { type: "Equipment", id },
+        { type: "Equipment", id: id.toString() },
         { type: "Equipment", id: "LIST" },
       ],
     }),
 
-    // NEW: Room management endpoints (according to Postman)
+    // Room management endpoints
     getRoomsByBuilding: builder.query<TRoom[], number>({
       query: (buildingId) =>
         `/inventory/equipment/rooms-by-building/${buildingId}`,
-    }),
-
-    // NEW: Equipment history and tracking
-    getMovementHistory: builder.query<any[], void>({
-      query: () => `inventory/movement-history/`,
-    }),
-
-    // NEW: Specification count endpoint (according to Postman)
-    getSpecificationCount: builder.query<any, void>({
-      query: () => `inventory/specifications/specification-count/`,
-      providesTags: [{ type: "Specifications", id: "COUNT" }],
     }),
   }),
 });
@@ -607,6 +623,7 @@ export const {
   useGetMyActionsQuery,
   useGetRoomsByBuildingQuery,
   useGetMovementHistoryQuery,
+  useGetSpecificationCountQuery,
 
   // Specifications
   useGetSpecComputerQuery,
@@ -617,7 +634,6 @@ export const {
   useGetTvSpecsQuery,
   useGetLaptopSpecsQuery,
   useGetRouterSpecsQuery,
-  useGetSpecificationCountQuery,
 
   // Create specifications
   useCreateSpecComputerMutation,
@@ -631,10 +647,10 @@ export const {
 
   // Equipment mutations
   useBulkCreateEquipmentMutation,
-  useUpdateEquipmentMutation, // NEW: Full update (PUT)
-  usePatchEquipmentMutation, // NEW: Partial update (PATCH)
-  useDeleteEquipmentMutation, // NEW: Individual delete
-  useDeleteEquipmentsMutation, // Bulk delete
+  useUpdateEquipmentMutation,
+  usePatchEquipmentMutation,
+  useDeleteEquipmentMutation,
+  useDeleteEquipmentsMutation,
 
   // Bulk operations
   useBulkUpdateInnMutation,
