@@ -15,7 +15,7 @@ import GogglesIcon from "@/assets/Icons/GogglesIcon";
 interface InventoryItemProps {
   item: EquipmentTypes;
   onPlusClick?: () => void;
-  setStepFormData?: (data: { name: string; id: number; }) => void;
+  setStepFormData?: (data: { name: string; id: number }) => void;
 }
 interface EquipmentIcons {
   icon: JSX.Element;
@@ -81,19 +81,23 @@ const CharItem: React.FC<InventoryItemProps> = ({
   const matchedIcon = inventoryIcons.find((icon) => icon.name === item.name);
 
   const handleClick = () => {
-    if (item.name !== 'Монитор' && setStepFormData && onPlusClick) {
+    // Remove the restriction for Monitor - now all equipment types can create templates
+    if (setStepFormData && onPlusClick) {
       setStepFormData({
         name: item.name,
-        id: item.id
+        id: item.id,
       });
       onPlusClick();
     }
   };
 
   return (
-    <div className={`flex items-center justify-between py-4 px-4 border-b border-gray-100 ${item.name === 'Монитор' ? 'opacity-50' : 'cursor-pointer'}`}>
+    <div
+      className={`flex items-center justify-between py-4 px-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors`}
+    >
       <div className={`flex items-center gap-4`}>
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+        <div
+          className={`w-12 h-12 rounded-full flex items-center justify-center ${
             matchedIcon?.color || "bg-blue-50"
           }`}
         >
@@ -101,13 +105,18 @@ const CharItem: React.FC<InventoryItemProps> = ({
             {matchedIcon?.icon || <CircleIcon />}
           </div>
         </div>
-        <span className="text-lg font-medium text-gray-800 pointer-events-none" onClick={(e)=> e.stopPropagation()}>{item.name}</span>
+        <span
+          className="text-lg font-medium text-gray-800 pointer-events-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {item.name}
+        </span>
       </div>
       <div className="flex-1 flex justify-end" onClick={handleClick}>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100"
+          className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
         >
           <Plus className="h-5 w-5 text-blue-500" />
         </Button>

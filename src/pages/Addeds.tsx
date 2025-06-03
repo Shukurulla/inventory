@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import type { EquipmentTypes, TBlock, Tequipment, TRoom } from "@/types";
 import { ChevronLeft, ChevronRight, CircleIcon, Trash2 } from "lucide-react";
-import React, { useState, type JSX } from "react";
+import React, { useEffect, useState, type JSX } from "react";
 import { EQUIPMENT_TYPES } from "../types";
 import IconLabel from "@/components/ReusableIcon";
 import MonoblockIcon from "@/assets/Icons/MonoblockIcon";
@@ -57,6 +57,9 @@ const Addeds: React.FC = () => {
   const totalItems = equipments?.results?.length || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const { data: allAddets = [], isLoading } = useGetAddedEquipmentsQuery();
+  useEffect(() => {
+    console.log(allAddets);
+  }, []);
 
   const filterByType = () => {
     const filteredArray: { id: number; name: string; data: Tequipment[] }[] =

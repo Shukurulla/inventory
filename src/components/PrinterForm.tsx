@@ -18,6 +18,7 @@ import { Button } from "./ui/button";
 import { toast } from "react-toastify";
 import { errorValidatingWithToast } from "@/utils/ErrorValidation";
 import { Loader2 } from "lucide-react";
+import { Checkbox } from "./ui/checkbox";
 
 export const PrinterForm: React.FC<createFormPropsType> = ({
   equipmentFormData,
@@ -75,6 +76,82 @@ export const PrinterForm: React.FC<createFormPropsType> = ({
     }
   };
 
+  if (create && onOpenChange) {
+    // CREATE MODE: Show full form with input fields
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="printer-model">Модель принтера</Label>
+            <Input
+              id="printer-model"
+              placeholder="HP LaserJet Pro M404dn"
+              value={formData.model}
+              onChange={(e) =>
+                setFormData({ ...formData, model: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="printer-type">Тип печати</Label>
+            <Select
+              value={formData.color ? "color" : "monochrome"}
+              onValueChange={(value) =>
+                setFormData({ ...formData, color: value === "color" })
+              }
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Выберите тип печати" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monochrome">Чёрно-белый</SelectItem>
+                <SelectItem value="color">Цветной</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Дополнительные возможности</Label>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="duplex"
+              checked={formData.duplex}
+              onCheckedChange={(checked: boolean) =>
+                setFormData({ ...formData, duplex: checked as boolean })
+              }
+            />
+            <Label htmlFor="duplex">Двусторонняя печать (Duplex)</Label>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-6 gap-x-2">
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={() => onOpenChange(false)}
+          >
+            Отменить
+          </Button>
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={(e) => handleSubmit(e)}
+            disabled={!formData.model}
+          >
+            {isLoading ? (
+              <Loader2 className="animate animate-spin" />
+            ) : (
+              "Создать шаблон"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MODE: Template selection + quantity (for equipment creation)
   return (
     <form>
       {!create && (
@@ -121,24 +198,6 @@ export const PrinterForm: React.FC<createFormPropsType> = ({
               }
             />
           </div>
-        </div>
-      )}
-      {onOpenChange && create && (
-        <div className="flex justify-between mt-6 gap-x-2">
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
-            onClick={(e) => handleSubmit(e)}
-          >
-            {isLoading ? <Loader2 className="animate animate-spin" /> : "Далее"}
-          </Button>
         </div>
       )}
     </form>

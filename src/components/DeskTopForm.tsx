@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Label } from "./ui/label";
+import { Checkbox } from "./ui/checkbox";
 import {
   useCreateSpecComputerMutation,
   useGetSpecComputerQuery,
@@ -88,6 +89,118 @@ export const DesktopForm: React.FC<createFormPropsType> = ({
     }
   };
 
+  if (create && onOpenChange) {
+    // CREATE MODE: Show full form with input fields
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="cpu">Процессор (CPU)</Label>
+            <Input
+              id="cpu"
+              placeholder="Intel Core i5-10400"
+              value={formData.cpu}
+              onChange={(e) =>
+                setFormData({ ...formData, cpu: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="ram">Оперативная память (RAM)</Label>
+            <Input
+              id="ram"
+              placeholder="8 GB DDR4"
+              value={formData.ram}
+              onChange={(e) =>
+                setFormData({ ...formData, ram: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="storage">Накопитель</Label>
+            <Input
+              id="storage"
+              placeholder="256 GB SSD"
+              value={formData.storage}
+              onChange={(e) =>
+                setFormData({ ...formData, storage: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="monitor_size">Размер монитора</Label>
+            <Input
+              id="monitor_size"
+              placeholder="24 дюйма"
+              value={formData.monitor_size}
+              onChange={(e) =>
+                setFormData({ ...formData, monitor_size: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Дополнительное оборудование</Label>
+          <div className="flex space-x-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="has_keyboard"
+                checked={formData.has_keyboard}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_keyboard: checked as boolean })
+                }
+              />
+              <Label htmlFor="has_keyboard">Клавиатура в комплекте</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="has_mouse"
+                checked={formData.has_mouse}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_mouse: checked as boolean })
+                }
+              />
+              <Label htmlFor="has_mouse">Мышь в комплекте</Label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-6 gap-x-2">
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={() => onOpenChange(false)}
+          >
+            Отменить
+          </Button>
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
+            onClick={(e) => handleSubmit(e)}
+            disabled={
+              !formData.cpu ||
+              !formData.ram ||
+              !formData.storage ||
+              !formData.monitor_size
+            }
+          >
+            {isLoading ? (
+              <Loader2 className="animate animate-spin" />
+            ) : (
+              "Создать шаблон"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MODE: Template selection + quantity (for equipment creation)
   return (
     <form className="">
       {!create && (
@@ -136,24 +249,6 @@ export const DesktopForm: React.FC<createFormPropsType> = ({
               }
             />
           </div>
-        </div>
-      )}
-      {onOpenChange && create && (
-        <div className="flex justify-between mt-6 gap-x-2">
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 text-accent-foreground bg-indigo-600 hover:bg-indigo-500"
-            onClick={(e) => handleSubmit(e)}
-          >
-            {isLoading ? <Loader2 className="animate animate-spin" /> : "Далее"}
-          </Button>
         </div>
       )}
     </form>

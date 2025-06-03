@@ -80,6 +80,109 @@ export const ProjectorAddForm: React.FC<createFormPropsType> = ({
     }
   };
 
+  if (create && onOpenChange) {
+    // CREATE MODE: Show full form with input fields
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="projector-model">Модель проектора</Label>
+            <Input
+              id="projector-model"
+              placeholder="Epson EB-X51"
+              value={formData.model}
+              onChange={(e) =>
+                setFormData({ ...formData, model: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="projector-lumens">Яркость (люмены)</Label>
+            <Input
+              id="projector-lumens"
+              type="number"
+              placeholder="3800"
+              value={formData.lumens || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  lumens: parseInt(e.target.value) || 0,
+                })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="projector-resolution">Разрешение</Label>
+            <Select
+              value={formData.resolution}
+              onValueChange={(value) =>
+                setFormData({ ...formData, resolution: value })
+              }
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Выберите разрешение" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1920x1080">1920x1080 (Full HD)</SelectItem>
+                <SelectItem value="1280x720">1280x720 (HD)</SelectItem>
+                <SelectItem value="1024x768">1024x768 (XGA)</SelectItem>
+                <SelectItem value="800x600">800x600 (SVGA)</SelectItem>
+                <SelectItem value="3840x2160">3840x2160 (4K)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="projector-throw">Тип проекции</Label>
+            <Select
+              value={formData.throw_type}
+              onValueChange={(value) =>
+                setFormData({ ...formData, throw_type: value })
+              }
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Выберите тип проекции" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standart">Стандартная проекция</SelectItem>
+                <SelectItem value="short">Короткофокусная</SelectItem>
+                <SelectItem value="ultra_short">
+                  Ультракороткофокусная
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-6 gap-x-2">
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
+            onClick={() => onOpenChange(false)}
+          >
+            Отменить
+          </Button>
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
+            onClick={(e) => handleSubmit(e)}
+            disabled={
+              !formData.model || !formData.lumens || !formData.resolution
+            }
+          >
+            {isLoading ? (
+              <Loader2 className="animate animate-spin" />
+            ) : (
+              "Создать шаблон"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MODE: Template selection + quantity (for equipment creation)
   return (
     <form>
       {!create && (
@@ -118,24 +221,6 @@ export const ProjectorAddForm: React.FC<createFormPropsType> = ({
               }
             />
           </div>
-        </div>
-      )}
-      {onOpenChange && create && (
-        <div className="flex justify-between mt-6 gap-x-2">
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 hover:bg-indigo-500"
-            onClick={(e) => handleSubmit(e)}
-          >
-            {isLoading ? <Loader2 className="animate animate-spin" /> : "Далее"}
-          </Button>
         </div>
       )}
     </form>

@@ -449,15 +449,36 @@ export const universityApi = createApi({
     }),
 
     // Partial equipment update (PATCH method)
+    // universityApi.ts fayliga qo'shing (endpoints ichiga)
+
+    // Partial equipment update (PATCH method) - mavjud bo'lsa yangilang
     patchEquipment: builder.mutation<
       Tequipment,
-      { id: number; data: Partial<EquipmentUpdateRequest> }
+      { id: number; data: Partial<any> }
     >({
-      query: ({ id, data }) => ({
-        url: `/inventory/equipment/${id}/`,
-        method: "PATCH",
-        body: data,
-      }),
+      query: ({ id, data }) => {
+        // FormData yaratish agar file bo'lsa
+        const formData = new FormData();
+
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            if (key === "photo" && value instanceof File) {
+              formData.append(key, value);
+            } else if (typeof value === "object" && !(value instanceof File)) {
+              // Object turindagi ma'lumotlarni JSON string qilib yuborish
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, String(value));
+            }
+          }
+        });
+
+        return {
+          url: `/inventory/equipment/${id}/`,
+          method: "PATCH",
+          body: formData,
+        };
+      },
       invalidatesTags: (result, error, { id }) => [
         { type: "Equipment", id: id.toString() },
         { type: "Equipment", id: "LIST" },

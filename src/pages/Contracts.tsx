@@ -1,4 +1,4 @@
-// src/pages/ContractsWithEdit.tsx
+// src/pages/ContractsWithEdit.tsx - Fixed with real API calls
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
@@ -7,6 +7,8 @@ import {
   useCreateContractMutation,
   useGetAllContractsQuery,
   useGetContractsQuery,
+  useUpdateContractMutation,
+  useDeleteContractMutation,
   type Contracts,
 } from "@/api/contactsApi";
 import Layout from "@/components/layout";
@@ -39,6 +41,10 @@ const ContractsWithEditPage = () => {
 
   const [createContract, { isLoading: isCreating }] =
     useCreateContractMutation();
+  const [updateContract, { isLoading: isUpdating }] =
+    useUpdateContractMutation();
+  const [deleteContract, { isLoading: isDeleting }] =
+    useDeleteContractMutation();
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -101,7 +107,6 @@ const ContractsWithEditPage = () => {
     if (!selectedContract) return;
 
     try {
-      // Simulate API call for editing
       const formData = new FormData();
       formData.append("number", editFormData.number);
       formData.append("valid_until", editFormData.valid_until);
@@ -109,11 +114,22 @@ const ContractsWithEditPage = () => {
         formData.append("file", editFormData.file);
       }
 
-      // In real app, you would call updateContract API
-      // await updateContract({ id: selectedContract.id, data: formData }).unwrap();
+      console.log("Updating contract with ID:", selectedContract.id);
+      console.log("Form data:", {
+        number: editFormData.number,
+        valid_until: editFormData.valid_until,
+        hasFile: !!editFormData.file,
+      });
 
-      toast.success("Договор успешно обновлен.");
+      // Real API call
+      await updateContract({
+        id: selectedContract.id,
+        data: formData,
+      }).unwrap();
+
+      toast.success("Договор успешно обновлен!");
       setEditModalOpen(false);
+      setEditFormData({ number: "", valid_until: "", file: null });
       await refetch();
     } catch (err) {
       console.error("Failed to update contract:", err);
@@ -130,11 +146,14 @@ const ContractsWithEditPage = () => {
     if (!selectedContract) return;
 
     try {
-      // Simulate API call for deletion
-      // await deleteContract(selectedContract.id).unwrap();
+      console.log("Deleting contract with ID:", selectedContract.id);
 
-      toast.success("Договор успешно удален.");
+      // Real API call
+      await deleteContract(selectedContract.id).unwrap();
+
+      toast.success("Договор успешно удален!");
       setDeleteModalOpen(false);
+      setSelectedContract(null);
       await refetch();
     } catch (err) {
       console.error("Failed to delete contract:", err);
@@ -242,12 +261,14 @@ const ContractsWithEditPage = () => {
                         <button
                           onClick={() => handleEdit(contract)}
                           className="hover:bg-gray-100 p-1 rounded"
+                          disabled={isUpdating}
                         >
                           <EditIcon className="w-6 h-6 cursor-pointer" />
                         </button>
                         <button
                           onClick={() => handleDelete(contract)}
                           className="hover:bg-gray-100 p-1 rounded"
+                          disabled={isDeleting}
                         >
                           <TrashIcon className="w-6 h-6 cursor-pointer" />
                         </button>
@@ -369,7 +390,8 @@ const ContractsWithEditPage = () => {
                       disabled={
                         !createFormData.number ||
                         !createFormData.valid_until ||
-                        !createFormData.file
+                        !createFormData.file ||
+                        isCreating
                       }
                       className="h-14 text-lg flex-1 bg-indigo-600 hover:bg-indigo-600 text-white flex items-center justify-center"
                     >
@@ -388,7 +410,9 @@ const ContractsWithEditPage = () => {
             <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
               <DialogContent className="w-[40%]">
                 <DialogHeader>
-                  <DialogTitle>Редактировать договор</DialogTitle>
+                  <DialogTitle>
+                    Редактировать договор №{selectedContract?.number}
+                  </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleEditSubmit} className="space-y-4">
                   <Input
@@ -455,15 +479,35 @@ const ContractsWithEditPage = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setEditModalOpen(false)}
+                      onClick={() => {
+                        setEditModalOpen(false);
+                        setEditFormData({
+                          number: "",
+                          valid_until: "",
+                          file: null,
+                        });
+                      }}
+                      disabled={isUpdating}
                     >
                       Отменить
                     </Button>
                     <Button
                       type="submit"
+                      disabled={
+                        !editFormData.number ||
+                        !editFormData.valid_until ||
+                        isUpdating
+                      }
                       className="bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
-                      Сохранить
+                      {isUpdating ? (
+                        <>
+                          <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                          Сохранение...
+                        </>
+                      ) : (
+                        "Сохранить"
+                      )}
                     </Button>
                   </div>
                 </form>
@@ -544,15 +588,27 @@ const ContractsWithEditPage = () => {
                 <div className="flex justify-end space-x-2">
                   <Button
                     variant="outline"
-                    onClick={() => setDeleteModalOpen(false)}
+                    onClick={() => {
+                      setDeleteModalOpen(false);
+                      setSelectedContract(null);
+                    }}
+                    disabled={isDeleting}
                   >
                     Отменить
                   </Button>
                   <Button
                     onClick={handleDeleteConfirm}
+                    disabled={isDeleting}
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    Удалить
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                        Удаление...
+                      </>
+                    ) : (
+                      "Удалить"
+                    )}
                   </Button>
                 </div>
               </DialogContent>

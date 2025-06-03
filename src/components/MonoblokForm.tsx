@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Label } from "./ui/label";
+import { Checkbox } from "./ui/checkbox";
 import {
   useCreateMonoblokSpecsMutation,
   useGetMonoblokSpecsQuery,
@@ -91,6 +92,148 @@ export const MonoBlokForm: React.FC<createFormPropsType> = ({
     }
   };
 
+  if (create && onOpenChange) {
+    // CREATE MODE: Show full form with input fields
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="monoblok-model">Модель моноблока</Label>
+            <Input
+              id="monoblok-model"
+              placeholder="HP All-in-One 24"
+              value={formData.model}
+              onChange={(e) =>
+                setFormData({ ...formData, model: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="monoblok-cpu">Процессор (CPU)</Label>
+            <Input
+              id="monoblok-cpu"
+              placeholder="Intel Core i5-10400"
+              value={formData.cpu}
+              onChange={(e) =>
+                setFormData({ ...formData, cpu: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="monoblok-ram">Оперативная память</Label>
+            <Input
+              id="monoblok-ram"
+              placeholder="8 GB DDR4"
+              value={formData.ram}
+              onChange={(e) =>
+                setFormData({ ...formData, ram: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="monoblok-storage">Накопитель</Label>
+            <Input
+              id="monoblok-storage"
+              placeholder="256 GB SSD"
+              value={formData.storage}
+              onChange={(e) =>
+                setFormData({ ...formData, storage: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="monoblok-screen">Размер экрана</Label>
+            <Input
+              id="monoblok-screen"
+              placeholder="24 дюйма"
+              value={formData.screen_size}
+              onChange={(e) =>
+                setFormData({ ...formData, screen_size: e.target.value })
+              }
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="monoblok-touch">Тип сенсора</Label>
+            <Select
+              value={formData.touch_type}
+              onValueChange={(value: "infrared" | "capacitive") =>
+                setFormData({ ...formData, touch_type: value })
+              }
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Выберите тип сенсора" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="infrared">Инфракрасный</SelectItem>
+                <SelectItem value="capacitive">Емкостный</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Комплектация</Label>
+          <div className="flex space-x-6">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="monoblok-keyboard"
+                checked={formData.has_keyboard}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_keyboard: checked as boolean })
+                }
+              />
+              <Label htmlFor="monoblok-keyboard">Клавиатура в комплекте</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="monoblok-mouse"
+                checked={formData.has_mouse}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_mouse: checked as boolean })
+                }
+              />
+              <Label htmlFor="monoblok-mouse">Мышь в комплекте</Label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-6 gap-x-2">
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 bg-indigo-600 text-accent-foreground hover:bg-indigo-500"
+            onClick={() => onOpenChange(false)}
+          >
+            Отменить
+          </Button>
+          <Button
+            variant="default"
+            className="gap-1 h-12 text-md flex-1 bg-indigo-600 text-accent-foreground hover:bg-indigo-500"
+            onClick={(e) => handleSubmit(e)}
+            disabled={
+              !formData.model ||
+              !formData.cpu ||
+              !formData.ram ||
+              !formData.storage ||
+              !formData.screen_size
+            }
+          >
+            {isLoading ? (
+              <Loader2 className="animate animate-spin" />
+            ) : (
+              "Создать шаблон"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // REGULAR MODE: Template selection + quantity (for equipment creation)
   return (
     <form className="">
       {!create && (
@@ -141,24 +284,6 @@ export const MonoBlokForm: React.FC<createFormPropsType> = ({
               }
             />
           </div>
-        </div>
-      )}
-      {onOpenChange && create && (
-        <div className="flex justify-between mt-6 gap-x-2">
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 text-accent-foreground hover:bg-indigo-500"
-            onClick={() => onOpenChange(false)}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="default"
-            className="gap-1 h-12 text-md flex-1 bg-indigo-600 text-accent-foreground hover:bg-indigo-500"
-            onClick={(e) => handleSubmit(e)}
-          >
-            {isLoading ? <Loader2 className="animate animate-spin" /> : "Далее"}
-          </Button>
         </div>
       )}
     </form>
