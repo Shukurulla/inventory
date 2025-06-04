@@ -1,9 +1,11 @@
+// src/pages/MainPage.tsx - Updated to use AddedEquipmentsPage for Addeds tab
 import { useState } from "react";
 import Layout from "@/components/layout";
-import { UniversityTable } from "@/components/universityTableNew"; // Bu qatorni o'zgartiring
+import { UniversityTable } from "@/components/universityTableNew";
 import { StatusTable } from "@/components/StatusTable";
+import AddedEquipmentPage from "@/pages/AddedEquipmentsPage";
 
-type TabType = "status" | "university";
+type TabType = "status" | "university" | "addeds";
 
 export default function MainPage() {
   const [activeTab, setActiveTab] = useState<TabType>("status");

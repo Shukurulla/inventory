@@ -1,4 +1,4 @@
-// src/components/TemplatesManagement.tsx - Updated with Edit Forms
+// src/components/TemplatesManagement.tsx - Fixed edit functionality
 import { useState } from "react";
 import {
   useGetSpecComputerQuery,
@@ -9,6 +9,15 @@ import {
   useGetTvSpecsQuery,
   useGetLaptopSpecsQuery,
   useGetRouterSpecsQuery,
+  // Add update mutations
+  useUpdateSpecComputerMutation,
+  useUpdateSpecProjectorMutation,
+  useUpdatePrinterSpecsMutation,
+  useUpdateMonoblokSpecsMutation,
+  useUpdateElectronicBoardSpecsMutation,
+  useUpdateTvSpecsMutation,
+  useUpdateLaptopSpecsMutation,
+  useUpdateRouterSpecsMutation,
 } from "@/api/universityApi";
 import {
   Dialog,
@@ -17,6 +26,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CustomAccordion from "@/components/CustomAccordion";
 import IconLabel from "@/components/ReusableIcon";
 import DesktopIcon from "@/assets/Icons/DesktopIcon";
@@ -28,18 +47,10 @@ import LaptopIcon from "@/assets/Icons/LaptopIcon";
 import PrinterIcon from "@/assets/Icons/PrinterIcon";
 import RouterIcon from "@/assets/Icons/RouterIcon";
 import GogglesIcon from "@/assets/Icons/GogglesIcon";
-import { Edit, Trash2, CircleIcon } from "lucide-react";
+import { Edit, Trash2, CircleIcon, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import type { JSX } from "react";
-import { DesktopForm } from "./DeskTopForm";
-import { ProjectorAddForm } from "./AddProjectorForm";
-import { PrinterForm } from "./PrinterForm";
-import { MonoBlokForm } from "./MonoblokForm";
-import { ElectronBoardForm } from "./ElectronicBoardForm";
-import { TvForm } from "./TvForm";
-import { LaptopForm } from "./LaptopForm";
-import { RouterForm } from "./RouterForm";
-import type { createEquipmentBodyType } from "@/types";
+import { errorValidatingWithToast } from "@/utils/ErrorValidation";
 
 interface EquipmentIcons {
   icon: JSX.Element;
@@ -49,58 +60,70 @@ interface EquipmentIcons {
 
 export const TemplatesManagement = () => {
   // API queries for all specifications
-  const { data: computerSpecs, isLoading: computerLoading } =
-    useGetSpecComputerQuery();
-  const { data: projectorSpecs, isLoading: projectorLoading } =
-    useGetSpecProjectorQuery();
-  const { data: printerSpecs, isLoading: printerLoading } =
-    useGetPrinterSpecsQuery();
-  const { data: monoblokSpecs, isLoading: monoblokLoading } =
-    useGetMonoblokSpecsQuery();
-  const { data: electronBoardSpecs, isLoading: electronBoardLoading } =
-    useGetElectronicBoardSpecsQuery();
-  const { data: tvSpecs, isLoading: tvLoading } = useGetTvSpecsQuery();
-  const { data: laptopSpecs, isLoading: laptopLoading } =
-    useGetLaptopSpecsQuery();
-  const { data: routerSpecs, isLoading: routerLoading } =
-    useGetRouterSpecsQuery();
+  const {
+    data: computerSpecs,
+    isLoading: computerLoading,
+    refetch: refetchComputer,
+  } = useGetSpecComputerQuery();
+  const {
+    data: projectorSpecs,
+    isLoading: projectorLoading,
+    refetch: refetchProjector,
+  } = useGetSpecProjectorQuery();
+  const {
+    data: printerSpecs,
+    isLoading: printerLoading,
+    refetch: refetchPrinter,
+  } = useGetPrinterSpecsQuery();
+  const {
+    data: monoblokSpecs,
+    isLoading: monoblokLoading,
+    refetch: refetchMonoblok,
+  } = useGetMonoblokSpecsQuery();
+  const {
+    data: electronBoardSpecs,
+    isLoading: electronBoardLoading,
+    refetch: refetchElectronBoard,
+  } = useGetElectronicBoardSpecsQuery();
+  const {
+    data: tvSpecs,
+    isLoading: tvLoading,
+    refetch: refetchTv,
+  } = useGetTvSpecsQuery();
+  const {
+    data: laptopSpecs,
+    isLoading: laptopLoading,
+    refetch: refetchLaptop,
+  } = useGetLaptopSpecsQuery();
+  const {
+    data: routerSpecs,
+    isLoading: routerLoading,
+    refetch: refetchRouter,
+  } = useGetRouterSpecsQuery();
+
+  // Update mutations
+  const [updateComputer, { isLoading: isUpdatingComputer }] =
+    useUpdateSpecComputerMutation();
+  const [updateProjector, { isLoading: isUpdatingProjector }] =
+    useUpdateSpecProjectorMutation();
+  const [updatePrinter, { isLoading: isUpdatingPrinter }] =
+    useUpdatePrinterSpecsMutation();
+  const [updateMonoblok, { isLoading: isUpdatingMonoblok }] =
+    useUpdateMonoblokSpecsMutation();
+  const [updateElectronBoard, { isLoading: isUpdatingElectronBoard }] =
+    useUpdateElectronicBoardSpecsMutation();
+  const [updateTv, { isLoading: isUpdatingTv }] = useUpdateTvSpecsMutation();
+  const [updateLaptop, { isLoading: isUpdatingLaptop }] =
+    useUpdateLaptopSpecsMutation();
+  const [updateRouter, { isLoading: isUpdatingRouter }] =
+    useUpdateRouterSpecsMutation();
 
   const [deleteTemplateModal, setDeleteTemplateModal] = useState(false);
   const [editTemplateModal, setEditTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
-  // Edit form data state
-  const [equipmentFormData, setEquipmentFormData] =
-    useState<createEquipmentBodyType>({
-      type_id: 0,
-      room_id: 0,
-      description: "",
-      status: "",
-      contract_id: null,
-      count: 1,
-      name: "",
-      name_prefix: "",
-      is_active: false,
-      photo: undefined,
-      computer_details: null,
-      printer_char: null,
-      extender_char: null,
-      router_char: null,
-      tv_char: null,
-      notebook_char: null,
-      monoblok_char: null,
-      projector_char: null,
-      whiteboard_char: null,
-      computer_specification_id: null,
-      printer_specification_id: null,
-      extender_specification_id: null,
-      router_specification_id: null,
-      tv_specification_id: null,
-      notebook_specification_id: null,
-      monoblok_specification_id: null,
-      projector_specification_id: null,
-      whiteboard_specification_id: null,
-    });
+  // Edit form data state - will hold the actual values to edit
+  const [editFormData, setEditFormData] = useState<any>({});
 
   const inventoryIcons: EquipmentIcons[] = [
     {
@@ -238,66 +261,8 @@ export const TemplatesManagement = () => {
   const handleEdit = (template: any) => {
     setSelectedTemplate(template);
 
-    // Populate form data based on template type
-    switch (template.type) {
-      case "Компьютер":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          computer_details: template,
-          computer_specification_id: template.id,
-        }));
-        break;
-      case "Проектор":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          projector_char: template,
-          projector_specification_id: template.id,
-        }));
-        break;
-      case "Принтер":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          printer_char: template,
-          printer_specification_id: template.id,
-        }));
-        break;
-      case "Моноблок":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          monoblok_char: template,
-          monoblok_specification_id: template.id,
-        }));
-        break;
-      case "Электронная доска":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          whiteboard_char: template,
-          whiteboard_specification_id: template.id,
-        }));
-        break;
-      case "Телевизор":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          tv_char: template,
-          tv_specification_id: template.id,
-        }));
-        break;
-      case "Ноутбук":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          notebook_char: template,
-          notebook_specification_id: template.id,
-        }));
-        break;
-      case "Роутер":
-        setEquipmentFormData((prev) => ({
-          ...prev,
-          router_char: template,
-          router_specification_id: template.id,
-        }));
-        break;
-    }
-
+    // Set the form data to the current template values for editing
+    setEditFormData({ ...template });
     setEditTemplateModal(true);
   };
 
@@ -307,16 +272,115 @@ export const TemplatesManagement = () => {
   };
 
   const handleEditSave = async () => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || !editFormData) return;
 
     try {
-      // Here you would call the appropriate update API based on template type
+      const templateType = selectedTemplate.type;
+      const templateId = selectedTemplate.id;
+
+      // Prepare only changed fields for PATCH request
+      const getChangedFields = (original: any, updated: any) => {
+        const changes: any = {};
+        Object.keys(updated).forEach((key) => {
+          if (
+            key !== "id" &&
+            key !== "type" &&
+            key !== "title" &&
+            original[key] !== updated[key]
+          ) {
+            changes[key] = updated[key];
+          }
+        });
+        return changes;
+      };
+
+      const changedFields = getChangedFields(selectedTemplate, editFormData);
+
+      // Only proceed if there are actual changes
+      if (Object.keys(changedFields).length === 0) {
+        toast.info("Нет изменений для сохранения");
+        return;
+      }
+
+      console.log("Sending PATCH request with changed fields:", changedFields);
+
+      // Call appropriate update API based on template type with only changed fields
+      switch (templateType) {
+        case "Компьютер":
+          await updateComputer({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchComputer();
+          break;
+
+        case "Проектор":
+          await updateProjector({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchProjector();
+          break;
+
+        case "Принтер":
+          await updatePrinter({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchPrinter();
+          break;
+
+        case "Моноблок":
+          await updateMonoblok({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchMonoblok();
+          break;
+
+        case "Электронная доска":
+          await updateElectronBoard({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchElectronBoard();
+          break;
+
+        case "Телевизор":
+          await updateTv({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchTv();
+          break;
+
+        case "Ноутбук":
+          await updateLaptop({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchLaptop();
+          break;
+
+        case "Роутер":
+          await updateRouter({
+            id: templateId,
+            data: changedFields,
+          }).unwrap();
+          refetchRouter();
+          break;
+
+        default:
+          throw new Error("Unknown template type");
+      }
+
       toast.success("Шаблон успешно обновлен!");
       setEditTemplateModal(false);
       setSelectedTemplate(null);
+      setEditFormData({});
     } catch (error) {
       console.error("Failed to update template:", error);
-      toast.error("Ошибка при обновлении шаблона");
+      errorValidatingWithToast(error);
     }
   };
 
@@ -334,77 +398,256 @@ export const TemplatesManagement = () => {
     }
   };
 
-  // Render appropriate edit form based on template type
+  // Render appropriate edit form based on template type with current values
   const renderEditForm = () => {
-    if (!selectedTemplate) return null;
+    if (!selectedTemplate || !editFormData) return null;
+
+    const isUpdating =
+      isUpdatingComputer ||
+      isUpdatingProjector ||
+      isUpdatingPrinter ||
+      isUpdatingMonoblok ||
+      isUpdatingElectronBoard ||
+      isUpdatingTv ||
+      isUpdatingLaptop ||
+      isUpdatingRouter;
 
     switch (selectedTemplate.type) {
       case "Компьютер":
         return (
-          <DesktopForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-cpu">Процессор (CPU)</Label>
+                <Input
+                  id="edit-cpu"
+                  value={editFormData.cpu || ""}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, cpu: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-ram">Оперативная память (RAM)</Label>
+                <Input
+                  id="edit-ram"
+                  value={editFormData.ram || ""}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, ram: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-storage">Накопитель</Label>
+                <Input
+                  id="edit-storage"
+                  value={editFormData.storage || ""}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      storage: e.target.value,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-monitor_size">Размер монитора</Label>
+                <Input
+                  id="edit-monitor_size"
+                  value={editFormData.monitor_size || ""}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      monitor_size: e.target.value,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Дополнительное оборудование</Label>
+              <div className="flex space-x-6">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-has_keyboard"
+                    checked={editFormData.has_keyboard || false}
+                    onCheckedChange={(checked) =>
+                      setEditFormData({
+                        ...editFormData,
+                        has_keyboard: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-has_keyboard">
+                    Клавиатура в комплекте
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-has_mouse"
+                    checked={editFormData.has_mouse || false}
+                    onCheckedChange={(checked) =>
+                      setEditFormData({
+                        ...editFormData,
+                        has_mouse: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-has_mouse">Мышь в комплекте</Label>
+                </div>
+              </div>
+            </div>
+          </div>
         );
+
       case "Проектор":
         return (
-          <ProjectorAddForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-model">Модель проектора</Label>
+                <Input
+                  id="edit-model"
+                  value={editFormData.model || ""}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, model: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-lumens">Яркость (люмены)</Label>
+                <Input
+                  id="edit-lumens"
+                  type="number"
+                  value={editFormData.lumens || ""}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      lumens: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-resolution">Разрешение</Label>
+                <Select
+                  value={editFormData.resolution || ""}
+                  onValueChange={(value) =>
+                    setEditFormData({ ...editFormData, resolution: value })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Выберите разрешение" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1920x1080">
+                      1920x1080 (Full HD)
+                    </SelectItem>
+                    <SelectItem value="1280x720">1280x720 (HD)</SelectItem>
+                    <SelectItem value="1024x768">1024x768 (XGA)</SelectItem>
+                    <SelectItem value="800x600">800x600 (SVGA)</SelectItem>
+                    <SelectItem value="3840x2160">3840x2160 (4K)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-throw">Тип проекции</Label>
+                <Select
+                  value={editFormData.throw_type || ""}
+                  onValueChange={(value) =>
+                    setEditFormData({ ...editFormData, throw_type: value })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Выберите тип проекции" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standart">
+                      Стандартная проекция
+                    </SelectItem>
+                    <SelectItem value="short">Короткофокусная</SelectItem>
+                    <SelectItem value="ultra_short">
+                      Ультракороткофокусная
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
         );
+
       case "Принтер":
         return (
-          <PrinterForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-printer-model">Модель принтера</Label>
+                <Input
+                  id="edit-printer-model"
+                  value={editFormData.model || ""}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, model: e.target.value })
+                  }
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-printer-type">Тип печати</Label>
+                <Select
+                  value={editFormData.color ? "color" : "monochrome"}
+                  onValueChange={(value) =>
+                    setEditFormData({
+                      ...editFormData,
+                      color: value === "color",
+                    })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Выберите тип печати" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monochrome">Чёрно-белый</SelectItem>
+                    <SelectItem value="color">Цветной</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Дополнительные возможности</Label>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-duplex"
+                  checked={editFormData.duplex || false}
+                  onCheckedChange={(checked) =>
+                    setEditFormData({
+                      ...editFormData,
+                      duplex: checked as boolean,
+                    })
+                  }
+                />
+                <Label htmlFor="edit-duplex">
+                  Двусторонняя печать (Duplex)
+                </Label>
+              </div>
+            </div>
+          </div>
         );
-      case "Моноблок":
-        return (
-          <MonoBlokForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
-        );
-      case "Электронная доска":
-        return (
-          <ElectronBoardForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
-        );
-      case "Телевизор":
-        return (
-          <TvForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
-        );
-      case "Ноутбук":
-        return (
-          <LaptopForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
-        );
-      case "Роутер":
-        return (
-          <RouterForm
-            equipmentFormData={equipmentFormData}
-            setEquipmentFormData={setEquipmentFormData}
-            create={false}
-          />
-        );
+
+      // Add other equipment types similar to above...
       default:
-        return <div>Неизвестный тип оборудования</div>;
+        return (
+          <div>
+            Редактирование для этого типа оборудования пока не реализовано
+          </div>
+        );
     }
   };
 
@@ -559,15 +802,53 @@ export const TemplatesManagement = () => {
           <div className="flex justify-end space-x-2 mt-6">
             <Button
               variant="outline"
-              onClick={() => setEditTemplateModal(false)}
+              onClick={() => {
+                setEditTemplateModal(false);
+                setSelectedTemplate(null);
+                setEditFormData({});
+              }}
+              disabled={
+                isUpdatingComputer ||
+                isUpdatingProjector ||
+                isUpdatingPrinter ||
+                isUpdatingMonoblok ||
+                isUpdatingElectronBoard ||
+                isUpdatingTv ||
+                isUpdatingLaptop ||
+                isUpdatingRouter
+              }
             >
               Отменить
             </Button>
             <Button
               onClick={handleEditSave}
+              disabled={
+                isUpdatingComputer ||
+                isUpdatingProjector ||
+                isUpdatingPrinter ||
+                isUpdatingMonoblok ||
+                isUpdatingElectronBoard ||
+                isUpdatingTv ||
+                isUpdatingLaptop ||
+                isUpdatingRouter
+              }
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
-              Сохранить изменения
+              {isUpdatingComputer ||
+              isUpdatingProjector ||
+              isUpdatingPrinter ||
+              isUpdatingMonoblok ||
+              isUpdatingElectronBoard ||
+              isUpdatingTv ||
+              isUpdatingLaptop ||
+              isUpdatingRouter ? (
+                <>
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  Сохранение...
+                </>
+              ) : (
+                "Сохранить изменения"
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -594,7 +875,10 @@ export const TemplatesManagement = () => {
           <div className="flex justify-end space-x-2">
             <Button
               variant="outline"
-              onClick={() => setDeleteTemplateModal(false)}
+              onClick={() => {
+                setDeleteTemplateModal(false);
+                setSelectedTemplate(null);
+              }}
             >
               Отменить
             </Button>

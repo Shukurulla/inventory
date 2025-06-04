@@ -1,11 +1,16 @@
+// src/components/SideBar.tsx
 import React, { useEffect, useState } from "react";
 import { Characteristics } from "../assets/Icons/CharacteristicsIcon";
 import { SavedIcon } from "../assets/Icons/SavedIcon";
 import { LayersIcon } from "../assets/Icons/LayersIcon";
 import { SettingsIcon } from "../assets/Icons/SettingsIcon";
 import { LogoIcon } from "@/assets/Icons/LogoIcon";
-import { HomeIcon } from "lucide-react";
+import { HomeIcon, User, LogOut, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useGetUserProfileQuery } from "@/api/userApi";
+import { useGetAddedEquipmentsQuery } from "@/api/universityApi";
+import { Button } from "./ui/button";
+import { toast } from "react-toastify";
 
 const NAV_KEY = "active_nav";
 
@@ -15,12 +20,47 @@ export function Sidebar() {
     return localStorage.getItem(NAV_KEY) || "Главная страница";
   });
 
+  // API hooks
+  const { data: userProfile, isLoading: profileLoading } =
+    useGetUserProfileQuery();
+  const { data: addedEquipments } = useGetAddedEquipmentsQuery();
+
   useEffect(() => {
     localStorage.setItem(NAV_KEY, activeNav);
   }, [activeNav]);
 
   const handleNavClick = (label: string) => {
     setActiveNav(label);
+  };
+
+  const handleLogout = () => {
+    // Clear all tokens and user data
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.setItem("active_nav", "Главная страница");
+
+    toast.success("Успешно вышли из системы");
+    navigate("/login", { replace: true });
+  };
+
+  const getInitials = () => {
+    if (!userProfile) return "U";
+    return `${userProfile.first_name?.charAt(0) || ""}${
+      userProfile.last_name?.charAt(0) || ""
+    }`;
+  };
+
+  const getUserDisplayName = () => {
+    if (!userProfile) return "Пользователь";
+    return (
+      `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim() ||
+      userProfile.username
+    );
+  };
+
+  const getEquipmentCount = () => {
+    return addedEquipments?.length || 0;
   };
 
   return (
@@ -63,7 +103,7 @@ export function Sidebar() {
           <NavItem
             icon={<LayersIcon width={24} height={24} />}
             label="Добавленные"
-            badge="67"
+            badge={getEquipmentCount().toString()}
             active={activeNav === "Добавленные"}
             onClick={() => {
               navigate("/addeds");
@@ -80,16 +120,64 @@ export function Sidebar() {
             }}
           />
         </nav>
-        <div className="p-3 flex items-center justify-center w-full">
-          <div className="p-3 w-full border-2 rounded-xl flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm">
-              АД
+
+        {/* User Profile Section */}
+        <div className="p-3 border-t">
+          {profileLoading ? (
+            <div className="flex items-center justify-center p-3">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="ml-2 text-sm">Загрузка...</span>
             </div>
-            <div className="text-sm">
-              <p className="text-sm font-medium">Ахмет Даулетмуратов</p>
-              <div className="text-xs">@max_manager</div>
+          ) : (
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {userProfile?.profile_picture ? (
+                  <img
+                    src={userProfile.profile_picture}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-sm">
+                    {getInitials()}
+                  </div>
+                )}
+                <div className="text-sm min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">
+                    {getUserDisplayName()}
+                  </p>
+                  <div className="text-xs text-muted-foreground truncate">
+                    @{userProfile?.username || "user"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    navigate("/settings");
+                    handleNavClick("Настройки");
+                  }}
+                  className="h-8 w-8 rounded-full hover:bg-accent"
+                  title="Настройки профиля"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLogout}
+                  className="h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20"
+                  title="Выйти"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

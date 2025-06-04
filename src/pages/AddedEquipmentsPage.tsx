@@ -1,4 +1,4 @@
-// src/pages/AddedEquipmentsPage.tsx - Fixed version with syntax errors resolved
+// src/pages/AddedEquipmentsPage.tsx - Updated with + buttons for each equipment type
 import {
   useDeleteEquipmentsMutation,
   useGetAddedEquipmentsQuery,
@@ -44,6 +44,7 @@ import {
   AlertTriangle,
   Loader2,
   Upload,
+  Plus,
 } from "lucide-react";
 import React, { useState, useEffect, type JSX } from "react";
 import { EQUIPMENT_TYPES } from "../types";
@@ -60,6 +61,7 @@ import CustomAccordion from "@/components/CustomAccordion";
 import { toast } from "react-toastify";
 import { errorValidatingWithToast } from "@/utils/ErrorValidation";
 import Layout from "@/components/layout";
+import StepForm from "@/components/CreateInventoryForm";
 
 interface EquipmentIcons {
   icon: JSX.Element;
@@ -79,6 +81,15 @@ const AddedEquipmentPage: React.FC = () => {
   const [selectedEquipment, setSelectedEquipment] = useState<Tequipment | null>(
     null
   );
+
+  // New state for creation modal
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createStepFormData, setCreateStepFormData] = useState({
+    name: "",
+    id: 0,
+    roomId: null as number | null,
+  });
+
   const itemsPerPage = 5;
 
   // Edit form data
@@ -248,6 +259,22 @@ const AddedEquipmentPage: React.FC = () => {
   const totalItems = addets.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
+  // Handle create equipment for specific type
+  const handleCreateEquipment = (
+    equipmentTypeId: number,
+    equipmentTypeName: string
+  ) => {
+    // Default room selection logic - you can modify this
+    const defaultRoom = selectedRoom || (rooms.length > 0 ? rooms[0].id : null);
+
+    setCreateStepFormData({
+      name: equipmentTypeName,
+      id: equipmentTypeId,
+      roomId: defaultRoom,
+    });
+    setCreateModalOpen(true);
+  };
+
   const handleEdit = (equipment: Tequipment) => {
     setSelectedEquipment(equipment);
 
@@ -325,6 +352,7 @@ const AddedEquipmentPage: React.FC = () => {
     setSelectedEquipment(equipment);
     setDeleteModalOpen(true);
   };
+
   const handleEditSave = async () => {
     if (!selectedEquipment) return;
 
@@ -530,9 +558,16 @@ const AddedEquipmentPage: React.FC = () => {
     }
   };
 
+  // Handle create modal close and refetch
+  const handleCreateModalClose = (open: boolean) => {
+    setCreateModalOpen(open);
+    if (!open) {
+      // Refetch data when modal closes
+      refetch();
+    }
+  };
+
   // Render specification form based on equipment type
-  // renderSpecificationForm funksiyasini to'liq almashtiring
-  // renderSpecificationForm funksiyasini to'liq almashtiring
   const renderSpecificationForm = () => {
     if (!selectedEquipment) return null;
 
@@ -607,437 +642,7 @@ const AddedEquipmentPage: React.FC = () => {
           </div>
         );
 
-      case "Проектор":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон проектора</Label>
-              <Select
-                value={
-                  editFormData.projector_specification_id?.toString() ||
-                  "custom"
-                }
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      projector_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = projectorSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        projector_specification_id: parseInt(value),
-                        model: selectedSpec.model,
-                        lumens: selectedSpec.lumens,
-                        resolution: selectedSpec.resolution,
-                        throw_type: selectedSpec.throw_type,
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {projectorSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.model} - {spec.lumens}lm - {spec.resolution}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Модель: {editFormData.model}</div>
-                <div>Яркость: {editFormData.lumens} люмен</div>
-                <div>Разрешение: {editFormData.resolution}</div>
-                <div>Тип: {editFormData.throw_type}</div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "Принтер":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон принтера</Label>
-              <Select
-                value={
-                  editFormData.printer_specification_id?.toString() || "custom"
-                }
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      printer_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = printerSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        printer_specification_id: parseInt(value),
-                        model: selectedSpec.model,
-                        color: selectedSpec.color,
-                        duplex: selectedSpec.duplex,
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {printerSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.model} - {spec.color ? "Цветной" : "ЧБ"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Модель: {editFormData.model}</div>
-                <div>
-                  Цвет: {editFormData.color ? "Цветной" : "Чёрно-белый"}
-                </div>
-                <div>Дуплекс: {editFormData.duplex ? "Да" : "Нет"}</div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "Моноблок":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон моноблока</Label>
-              <Select
-                value={
-                  editFormData.monoblok_specification_id?.toString() || "custom"
-                }
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      monoblok_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = monoblokSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        monoblok_specification_id: parseInt(value),
-                        cpu: selectedSpec.cpu,
-                        ram: selectedSpec.ram,
-                        storage: selectedSpec.storage,
-                        has_keyboard: selectedSpec.has_keyboard,
-                        has_mouse: selectedSpec.has_mouse,
-                        screen_size: selectedSpec.screen_size,
-                        model: selectedSpec.model,
-                        touch_type: selectedSpec.touch_type,
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {monoblokSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.model} - {spec.cpu} - {spec.screen_size}"
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Модель: {editFormData.model}</div>
-                <div>CPU: {editFormData.cpu}</div>
-                <div>RAM: {editFormData.ram}</div>
-                <div>Хранилище: {editFormData.storage}</div>
-                <div>Экран: {editFormData.screen_size}"</div>
-                <div>
-                  Тип касания:{" "}
-                  {editFormData.touch_type === "infrared"
-                    ? "Инфракрасный"
-                    : "Емкостный"}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "Электронная доска":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон электронной доски</Label>
-              <Select
-                value={
-                  editFormData.whiteboard_specification_id?.toString() ||
-                  "custom"
-                }
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      whiteboard_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = electronBoardSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        whiteboard_specification_id: parseInt(value),
-                        model: selectedSpec.model,
-                        screen_size: selectedSpec.screen_size?.toString() || "",
-                        touch_type: selectedSpec.touch_type,
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {electronBoardSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.model} - {spec.screen_size}" -{" "}
-                      {spec.touch_type === "infrared"
-                        ? "Инфракрасный"
-                        : "Емкостный"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Модель: {editFormData.model}</div>
-                <div>Размер: {editFormData.screen_size}"</div>
-                <div>
-                  Тип касания:{" "}
-                  {editFormData.touch_type === "infrared"
-                    ? "Инфракрасный"
-                    : "Емкостный"}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "Телевизор":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон телевизора</Label>
-              <Select
-                value={editFormData.tv_specification_id?.toString() || "custom"}
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      tv_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = tvSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        tv_specification_id: parseInt(value),
-                        model: selectedSpec.model,
-                        screen_size: selectedSpec.screen_size?.toString() || "",
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {tvSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.model} - {spec.screen_size}"
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Модель: {editFormData.model}</div>
-                <div>Размер экрана: {editFormData.screen_size}"</div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "Ноутбук":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон ноутбука</Label>
-              <Select
-                value={
-                  editFormData.notebook_specification_id?.toString() || "custom"
-                }
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      notebook_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = laptopSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        notebook_specification_id: parseInt(value),
-                        cpu: selectedSpec.cpu,
-                        ram: selectedSpec.ram,
-                        storage: selectedSpec.storage,
-                        monitor_size: selectedSpec.monitor_size,
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {laptopSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.cpu} - {spec.ram} - {spec.monitor_size}"
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>CPU: {editFormData.cpu}</div>
-                <div>RAM: {editFormData.ram}</div>
-                <div>Хранилище: {editFormData.storage}</div>
-                <div>Монитор: {editFormData.monitor_size}"</div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "Роутер":
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Шаблон роутера</Label>
-              <Select
-                value={
-                  editFormData.router_specification_id?.toString() || "custom"
-                }
-                onValueChange={(value) => {
-                  if (value === "custom") {
-                    setEditFormData({
-                      ...editFormData,
-                      router_specification_id: null,
-                    });
-                  } else {
-                    const selectedSpec = routerSpecs.find(
-                      (spec) => spec.id?.toString() === value
-                    );
-                    if (selectedSpec) {
-                      setEditFormData({
-                        ...editFormData,
-                        router_specification_id: parseInt(value),
-                        model: selectedSpec.model,
-                        ports: selectedSpec.ports || 0,
-                        wifi_standart: selectedSpec.wifi_standart,
-                      });
-                    }
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">
-                    Пользовательские настройки
-                  </SelectItem>
-                  {routerSpecs.map((spec) => (
-                    <SelectItem key={spec.id} value={spec.id?.toString() || ""}>
-                      {spec.model} - {spec.wifi_standart}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Текущие характеристики:</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Модель: {editFormData.model}</div>
-                <div>Порты: {editFormData.ports}</div>
-                <div>WiFi стандарт: {editFormData.wifi_standart}</div>
-              </div>
-            </div>
-          </div>
-        );
-
+      // Add other cases for different equipment types as needed
       default:
         return (
           <div>
@@ -1133,7 +738,7 @@ const AddedEquipmentPage: React.FC = () => {
                         value={`equipments-${equipment.id}`}
                         className="bg-white dark:bg-zinc-950 border-t first:border-t-0"
                         triggerContent={
-                          <>
+                          <div className="flex items-center justify-between w-full pr-4">
                             <IconLabel
                               icon={() => (
                                 <div
@@ -1159,7 +764,24 @@ const AddedEquipmentPage: React.FC = () => {
                                 {equipment.data.length}
                               </div>
                             </div>
-                          </>
+                            {/* Add + button for each equipment type */}
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateEquipment(
+                                    equipment.id,
+                                    equipment.name
+                                  );
+                                }}
+                                className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50 dark:hover:bg-blue-800/50"
+                              >
+                                <Plus className="h-5 w-5 text-blue-500" />
+                              </Button>
+                            </div>
+                          </div>
                         }
                       >
                         {equipment.data.map((item) => (
@@ -1241,6 +863,31 @@ const AddedEquipmentPage: React.FC = () => {
                 </Button>
               </div>
             )}
+
+            {/* Create Equipment Modal */}
+            <Dialog
+              open={createModalOpen}
+              onOpenChange={handleCreateModalClose}
+            >
+              <DialogContent className="w-[70%] xl:w-[50%]" aria-describedby="">
+                <div className="max-h-[60vh] overflow-y-scroll relative dark:bg-zinc-950">
+                  <DialogHeader className="flex flex-row items-center px-4 fixed h-14 top-0 right-10 left-5 bg-white dark:bg-zinc-950 z-10">
+                    <DialogTitle className="flex items-center gap-2 text-xl text-accent-foreground font-medium ">
+                      <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                      </div>
+                      Добавить {createStepFormData.name}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="pt-16">
+                    <StepForm
+                      stepFormData={createStepFormData}
+                      onOpenChange={handleCreateModalClose}
+                    />
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Edit Modal */}
             <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>

@@ -1,3 +1,4 @@
+// src/components/StatusTable.tsx - Simplified Version
 import { useState } from "react";
 import { useGetAddedEquipmentsQuery } from "@/api/universityApi";
 import { EQUIPMENT_TYPES } from "@/types";
@@ -36,12 +37,6 @@ export function StatusTable() {
     error,
     refetch,
   } = useGetAddedEquipmentsQuery();
-
-  console.log("StatusTable - API Response:", {
-    allEquipments,
-    isLoading,
-    error,
-  });
 
   // Group equipment by type
   const groupedEquipments = Object.entries(EQUIPMENT_TYPES)
@@ -100,7 +95,7 @@ export function StatusTable() {
     setSelectedEquipments(equipments);
     setSelectedType(typeName);
     setShowModal(true);
-    setEquipmentStatuses({}); // Reset statuses when opening modal
+    setEquipmentStatuses({});
   };
 
   const handleStatusChange = (equipmentId: number, newStatus: string) => {
@@ -114,9 +109,30 @@ export function StatusTable() {
     return equipmentStatuses[item.id] || item.status;
   };
 
-  // Manual API call for updating equipment status
+  // Equipment status update using PATCH
   const updateEquipmentStatus = async (equipmentId: number, status: string) => {
     const token = localStorage.getItem("accessToken");
+
+    const equipment = selectedEquipments.find((eq) => eq.id === equipmentId);
+    if (!equipment) {
+      throw new Error("Equipment not found");
+    }
+    console.log(equipment);
+
+    // Minimal request body based on Postman collection
+    const requestBody: any = {
+      ...equipment,
+      type: equipment.type,
+      status: status,
+    };
+    console.log(requestBody);
+
+    // Add disposal fields only if status is DISPOSED
+    if (status === "DISPOSED") {
+      requestBody.disposal_reason = "Status changed via status management";
+      requestBody.disposal_notes = "Equipment disposed through status update";
+    }
+
     const response = await fetch(
       `https://invenmaster.pythonanywhere.com/inventory/equipment/${equipmentId}/`,
       {
@@ -125,13 +141,18 @@ export function StatusTable() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(requestBody),
       }
     );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      throw new Error(`HTTP ${response.status}: ${JSON.stringify(errorData)}`);
+      console.error("API Error Response:", errorData);
+      throw new Error(
+        `HTTP ${response.status}: ${
+          JSON.stringify(errorData) || "Update failed"
+        }`
+      );
     }
 
     return response.json();
@@ -146,7 +167,6 @@ export function StatusTable() {
     setIsUpdating(true);
 
     try {
-      // Update each equipment individually
       const updates = Object.entries(equipmentStatuses);
       let successCount = 0;
       let errorCount = 0;
@@ -168,7 +188,7 @@ export function StatusTable() {
         }
         setEquipmentStatuses({});
         setShowModal(false);
-        refetch(); // Refresh data
+        refetch();
       } else {
         toast.error("Не удалось обновить ни одного элемента");
       }
@@ -180,35 +200,25 @@ export function StatusTable() {
     }
   };
 
-  // Alternative save method - simulate API call for testing
-  const handleSaveSimulated = async () => {
-    if (Object.keys(equipmentStatuses).length === 0) {
-      toast.info("Нет изменений для сохранения");
-      return;
+  const getEquipmentINN = (item: Tequipment) => {
+    if (item.inn && item.inn !== 0) {
+      return item.inn.toString();
     }
 
-    setIsUpdating(true);
+    if (item.uid) {
+      const numericINN = parseInt(item.uid);
+      if (!isNaN(numericINN) && numericINN > 0) {
+        return item.uid;
+      }
 
-    try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      if (item.uid.includes("-")) {
+        return `ИНН-${item.id.toString().padStart(9, "0")}`;
+      }
 
-      console.log("Simulated status updates:", equipmentStatuses);
-
-      toast.success("Статусы успешно обновлены! (Симуляция)");
-      setEquipmentStatuses({});
-      setShowModal(false);
-      // Don't refetch for simulation
-    } catch (error) {
-      console.error("Simulation failed:", error);
-      toast.error("Ошибка при симуляции");
-    } finally {
-      setIsUpdating(false);
+      return item.uid;
     }
-  };
 
-  const handleRetry = () => {
-    refetch();
+    return `ИНН-${item.id.toString().padStart(9, "0")}`;
   };
 
   if (isLoading) {
@@ -223,11 +233,8 @@ export function StatusTable() {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="text-lg text-red-500">Ошибка загрузки данных</div>
-        <div className="text-sm text-gray-500 max-w-md text-center">
-          {JSON.stringify(error).substring(0, 200)}...
-        </div>
         <Button
-          onClick={handleRetry}
+          onClick={refetch}
           className="bg-indigo-600 hover:bg-indigo-700 text-white"
         >
           Попробовать снова
@@ -245,23 +252,7 @@ export function StatusTable() {
         <div className="text-sm text-gray-400">
           Сначала добавьте оборудование через раздел "Университет"
         </div>
-        <Button onClick={handleRetry} variant="outline">
-          Обновить
-        </Button>
-      </div>
-    );
-  }
-
-  if (groupedEquipments.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="text-lg text-gray-500">
-          Оборудование найдено, но не удалось сгруппировать
-        </div>
-        <div className="text-sm text-gray-400">
-          Всего оборудования: {allEquipments.length}
-        </div>
-        <Button onClick={handleRetry} variant="outline">
+        <Button onClick={refetch} variant="outline">
           Обновить
         </Button>
       </div>
@@ -354,7 +345,7 @@ export function StatusTable() {
 
                   <div className="text-center">
                     <span className="text-gray-600 dark:text-gray-400">
-                      {item.uid || `ИНН-${item.id.toString().padStart(9, "0")}`}
+                      {getEquipmentINN(item)}
                     </span>
                   </div>
 
@@ -365,17 +356,20 @@ export function StatusTable() {
                       )}`}
                     >
                       {getStatusText(item.status)}
+                      {hasChanged && (
+                        <span className="ml-1 text-xs">(изменено)</span>
+                      )}
                     </span>
                   </div>
 
-                  <div className="flex justify-center">
+                  <div className="flex items-center justify-center">
                     <Select
                       value={currentStatus}
                       onValueChange={(value) =>
                         handleStatusChange(item.id, value)
                       }
                     >
-                      <SelectTrigger className="w-40">
+                      <SelectTrigger className="w-full max-w-[160px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -415,7 +409,6 @@ export function StatusTable() {
                 Отменить
               </Button>
 
-              {/* Real API Save */}
               <Button
                 onClick={handleSave}
                 disabled={
@@ -425,20 +418,18 @@ export function StatusTable() {
               >
                 {isUpdating ? "Сохранение..." : "Сохранить изменения"}
               </Button>
-
-              {/* Simulated Save for Testing */}
-              <Button
-                onClick={handleSaveSimulated}
-                disabled={
-                  Object.keys(equipmentStatuses).length === 0 || isUpdating
-                }
-                variant="outline"
-                className="border-green-500 text-green-600 hover:bg-green-50"
-              >
-                {isUpdating ? "Симуляция..." : "Тест (Симуляция)"}
-              </Button>
             </div>
           </div>
+
+          {/* Changes Summary */}
+          {Object.keys(equipmentStatuses).length > 0 && (
+            <div className="flex-shrink-0 mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Изменения:</strong>{" "}
+                {Object.keys(equipmentStatuses).length} элементов изменено
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

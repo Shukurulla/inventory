@@ -1,14 +1,30 @@
-// src/pages/Settings.tsx - Fixed version
+// src/pages/Settings.tsx
 import { LogoIcon } from "@/assets/Icons/LogoIcon";
 import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Edit } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Edit, Upload, Trash2, Lock, Loader2, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-toastify";
+import {
+  useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
+  useGetUserStatsQuery,
+  useUploadProfilePictureMutation,
+  useDeleteProfilePictureMutation,
+  useChangePasswordMutation,
+  type UserProfileUpdate,
+} from "@/api/userApi";
+import { errorValidatingWithToast } from "@/utils/ErrorValidation";
 
 type Theme = "light" | "dark" | "system";
 
@@ -16,42 +32,68 @@ const SettingsPage: React.FC = () => {
   const [theme, setTheme] = useState<Theme>("light");
   const [currentFont, setCurrentFont] = useState("SF Pro Display");
 
-  // Profile data
-  const [profileData, setProfileData] = useState({
-    firstName: "Ахмет",
-    lastName: "Даулетмуратов",
-    username: "max_manager",
-    email: "ahmet.dauletmuratov@example.com",
-    phone: "+998 90 123 45 67",
-    position: "Менеджер по оборудованию",
-    department: "IT отдел",
-    joinDate: "2023-01-15",
-  });
+  // API hooks
+  const {
+    data: userProfile,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useGetUserProfileQuery();
+  const { data: userStats, isLoading: statsLoading } = useGetUserStatsQuery();
+  const [updateProfile, { isLoading: isUpdating }] =
+    useUpdateUserProfileMutation();
+  const [uploadPicture, { isLoading: isUploading }] =
+    useUploadProfilePictureMutation();
+  const [deletePicture, { isLoading: isDeleting }] =
+    useDeleteProfilePictureMutation();
+  const [changePassword, { isLoading: isChangingPassword }] =
+    useChangePasswordMutation();
 
-  const [originalProfileData, setOriginalProfileData] = useState({
-    ...profileData,
-  });
+  // Profile form state
+  const [profileData, setProfileData] = useState<UserProfileUpdate>({});
+  const [originalProfileData, setOriginalProfileData] =
+    useState<UserProfileUpdate>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [newProfilePicture, setNewProfilePicture] = useState<File | null>(null);
 
+  // Password change state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+
+  // Load profile data when received from API
+  useEffect(() => {
+    if (userProfile) {
+      const formattedData: UserProfileUpdate = {
+        first_name: userProfile.first_name,
+        last_name: userProfile.last_name,
+        email: userProfile.email,
+        phone_number: userProfile.phone_number,
+        position: userProfile.position,
+        department: userProfile.department,
+      };
+      setProfileData(formattedData);
+      setOriginalProfileData(formattedData);
+    }
+  }, [userProfile]);
+
+  // Theme and font effects
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme;
     const savedFont = localStorage.getItem("font") || "SF Pro Display";
-    setTheme(savedTheme);
+    if (savedTheme) setTheme(savedTheme);
     setCurrentFont(savedFont);
-    applyTheme(savedTheme);
+    applyTheme(savedTheme || "light");
     applyFont(savedFont);
   }, []);
 
   const applyTheme = (selectedTheme: Theme) => {
     const root = document.documentElement;
-
-    // Remove existing theme classes
     root.classList.remove("dark");
-
     if (selectedTheme === "dark") {
       root.classList.add("dark");
-    } else if (selectedTheme === "light") {
-      // Light theme is default, no class needed
     } else if (selectedTheme === "system") {
       if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
         root.classList.add("dark");
@@ -60,29 +102,19 @@ const SettingsPage: React.FC = () => {
   };
 
   const applyFont = (fontName: string) => {
-    // Apply font to body and all elements
     document.body.style.fontFamily = `"${fontName}", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif`;
 
-    // Also apply to root element for better coverage
-    document.documentElement.style.setProperty(
-      "--font-family",
-      `"${fontName}", sans-serif`
-    );
+    const existingFontStyle = document.getElementById("dynamic-font-style");
+    if (existingFontStyle) {
+      existingFontStyle.remove();
+    }
 
-    // Force update all text elements
     const style = document.createElement("style");
     style.textContent = `
       * {
         font-family: "${fontName}", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif !important;
       }
     `;
-
-    // Remove any existing font style
-    const existingFontStyle = document.getElementById("dynamic-font-style");
-    if (existingFontStyle) {
-      existingFontStyle.remove();
-    }
-
     style.id = "dynamic-font-style";
     document.head.appendChild(style);
   };
@@ -111,41 +143,132 @@ const SettingsPage: React.FC = () => {
 
   const handleProfileSave = async () => {
     try {
-      // Simulate API call to save profile data
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const updateData: UserProfileUpdate = { ...profileData };
 
-      // Update original data to reflect saved changes
+      if (newProfilePicture) {
+        updateData.profile_picture = newProfilePicture;
+      }
+
+      await updateProfile(updateData).unwrap();
+
       setOriginalProfileData({ ...profileData });
       setIsEditing(false);
+      setNewProfilePicture(null);
       toast.success("Профиль успешно обновлен!");
-
-      console.log("Profile saved:", profileData);
+      await refetchProfile();
     } catch (error) {
-      toast.error("Ошибка при сохранении профиля");
       console.error("Error saving profile:", error);
+      errorValidatingWithToast(error);
     }
   };
 
   const handleProfileCancel = () => {
-    // Revert changes to original data
     setProfileData({ ...originalProfileData });
     setIsEditing(false);
+    setNewProfilePicture(null);
     toast.info("Изменения отменены");
   };
 
-  const handleInputChange = (
-    field: keyof typeof profileData,
-    value: string
-  ) => {
+  const handleInputChange = (field: keyof UserProfileUpdate, value: string) => {
     setProfileData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const hasProfileChanges = () => {
-    return JSON.stringify(profileData) !== JSON.stringify(originalProfileData);
+  const handleProfilePictureUpload = async (file: File) => {
+    try {
+      await uploadPicture(file).unwrap();
+      toast.success("Фото профиля обновлено!");
+      await refetchProfile();
+    } catch (error) {
+      console.error("Error uploading picture:", error);
+      errorValidatingWithToast(error);
+    }
   };
+
+  const handleProfilePictureDelete = async () => {
+    try {
+      await deletePicture().unwrap();
+      toast.success("Фото профиля удалено!");
+      await refetchProfile();
+    } catch (error) {
+      console.error("Error deleting picture:", error);
+      errorValidatingWithToast(error);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      toast.error("Новые пароли не совпадают");
+      return;
+    }
+
+    if (passwordData.new_password.length < 8) {
+      toast.error("Новый пароль должен содержать минимум 8 символов");
+      return;
+    }
+
+    try {
+      await changePassword(passwordData).unwrap();
+      toast.success("Пароль успешно изменен!");
+      setShowPasswordModal(false);
+      setPasswordData({
+        old_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      errorValidatingWithToast(error);
+    }
+  };
+
+  const hasProfileChanges = () => {
+    return (
+      JSON.stringify(profileData) !== JSON.stringify(originalProfileData) ||
+      newProfilePicture !== null
+    );
+  };
+
+  const getInitials = () => {
+    if (!userProfile) return "U";
+    return `${userProfile.first_name?.charAt(0) || ""}${
+      userProfile.last_name?.charAt(0) || ""
+    }`;
+  };
+
+  const formatJoinDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("ru-RU");
+  };
+
+  const formatLastLogin = (dateString?: string) => {
+    if (!dateString) return "Никогда";
+    const loginDate = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - loginDate.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffInHours < 24) {
+      return "Сегодня";
+    } else if (diffInHours < 48) {
+      return "Вчера";
+    } else {
+      return loginDate.toLocaleDateString("ru-RU");
+    }
+  };
+
+  if (profileLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Загрузка профиля...</span>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -177,7 +300,7 @@ const SettingsPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-4">
                 {/* Light Theme Card */}
                 <div
-                  className={`border border-border bg-white rounded-lg p-4 flex flex-col items-center justify-center  cursor-pointer transition-all hover:shadow-md ${
+                  className={`border border-border bg-white rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-all hover:shadow-md ${
                     theme === "light" ? "ring-2 ring-indigo-500" : ""
                   }`}
                   onClick={() => handleThemeChange("light")}
@@ -260,6 +383,14 @@ const SettingsPage: React.FC = () => {
                     Информация профиля
                   </CardTitle>
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowPasswordModal(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Lock className="h-4 w-4" />
+                      Изменить пароль
+                    </Button>
                     {isEditing && (
                       <Button
                         variant="outline"
@@ -275,22 +406,86 @@ const SettingsPage: React.FC = () => {
                         isEditing ? handleProfileSave() : setIsEditing(true)
                       }
                       className="flex items-center gap-2"
-                      disabled={isEditing && !hasProfileChanges()}
+                      disabled={
+                        (isEditing && !hasProfileChanges()) || isUpdating
+                      }
                     >
-                      <Edit className="h-4 w-4" />
-                      {isEditing ? "Сохранить" : "Редактировать"}
+                      {isUpdating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Edit className="h-4 w-4" />
+                      )}
+                      {isUpdating
+                        ? "Сохранение..."
+                        : isEditing
+                        ? "Сохранить"
+                        : "Редактировать"}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Avatar Section */}
                   <div className="flex items-center gap-6">
-                    <div className="w-24 h-24 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-2xl">
-                      {profileData.firstName.charAt(0)}
-                      {profileData.lastName.charAt(0)}
+                    <div className="relative">
+                      {userProfile?.profile_picture ? (
+                        <img
+                          src={userProfile.profile_picture}
+                          alt="Profile"
+                          className="w-24 h-24 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-2xl">
+                          {getInitials()}
+                        </div>
+                      )}
                     </div>
                     {isEditing && (
-                      <Button variant="outline">Изменить фото</Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = "image/*";
+                            input.onchange = (e) => {
+                              const file = (e.target as HTMLInputElement)
+                                .files?.[0];
+                              if (file) {
+                                setNewProfilePicture(file);
+                              }
+                            };
+                            input.click();
+                          }}
+                          disabled={isUploading}
+                        >
+                          {isUploading ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <Upload className="h-4 w-4 mr-2" />
+                          )}
+                          Загрузить фото
+                        </Button>
+                        {userProfile?.profile_picture && (
+                          <Button
+                            variant="outline"
+                            onClick={handleProfilePictureDelete}
+                            disabled={isDeleting}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            {isDeleting ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 mr-2" />
+                            )}
+                            Удалить
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    {newProfilePicture && (
+                      <div className="text-sm text-blue-600 dark:text-blue-400">
+                        Новое фото: {newProfilePicture.name}
+                      </div>
                     )}
                   </div>
 
@@ -305,9 +500,9 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="firstName"
-                        value={profileData.firstName}
+                        value={profileData.first_name || ""}
                         onChange={(e) =>
-                          handleInputChange("firstName", e.target.value)
+                          handleInputChange("first_name", e.target.value)
                         }
                         disabled={!isEditing}
                         className="h-12 bg-background text-foreground border-border"
@@ -322,9 +517,9 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="lastName"
-                        value={profileData.lastName}
+                        value={profileData.last_name || ""}
                         onChange={(e) =>
-                          handleInputChange("lastName", e.target.value)
+                          handleInputChange("last_name", e.target.value)
                         }
                         disabled={!isEditing}
                         className="h-12 bg-background text-foreground border-border"
@@ -339,12 +534,9 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="username"
-                        value={profileData.username}
-                        onChange={(e) =>
-                          handleInputChange("username", e.target.value)
-                        }
-                        disabled={!isEditing}
-                        className="h-12 bg-background text-foreground border-border"
+                        value={userProfile?.username || ""}
+                        disabled={true}
+                        className="h-12 bg-background text-foreground border-border opacity-50"
                       />
                     </div>
                     <div className="space-y-2">
@@ -354,7 +546,7 @@ const SettingsPage: React.FC = () => {
                       <Input
                         id="email"
                         type="email"
-                        value={profileData.email}
+                        value={profileData.email || ""}
                         onChange={(e) =>
                           handleInputChange("email", e.target.value)
                         }
@@ -368,9 +560,9 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="phone"
-                        value={profileData.phone}
+                        value={profileData.phone_number || ""}
                         onChange={(e) =>
-                          handleInputChange("phone", e.target.value)
+                          handleInputChange("phone_number", e.target.value)
                         }
                         disabled={!isEditing}
                         className="h-12 bg-background text-foreground border-border"
@@ -385,7 +577,7 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="position"
-                        value={profileData.position}
+                        value={profileData.position || ""}
                         onChange={(e) =>
                           handleInputChange("position", e.target.value)
                         }
@@ -402,7 +594,7 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="department"
-                        value={profileData.department}
+                        value={profileData.department || ""}
                         onChange={(e) =>
                           handleInputChange("department", e.target.value)
                         }
@@ -419,13 +611,13 @@ const SettingsPage: React.FC = () => {
                       </Label>
                       <Input
                         id="joinDate"
-                        type="date"
-                        value={profileData.joinDate}
-                        onChange={(e) =>
-                          handleInputChange("joinDate", e.target.value)
+                        value={
+                          userProfile
+                            ? formatJoinDate(userProfile.date_joined)
+                            : ""
                         }
-                        disabled={!isEditing}
-                        className="h-12 bg-background text-foreground border-border"
+                        disabled={true}
+                        className="h-12 bg-background text-foreground border-border opacity-50"
                       />
                     </div>
                   </div>
@@ -439,7 +631,7 @@ const SettingsPage: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Additional Info */}
+              {/* Statistics */}
               <div className="grid my-5 grid-cols-1 gap-6">
                 <Card className="bg-card border-border">
                   <CardHeader>
@@ -448,36 +640,164 @@ const SettingsPage: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Добавлено оборудования:
-                      </span>
-                      <span className="font-semibold text-card-foreground">
-                        127
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Создано договоров:
-                      </span>
-                      <span className="font-semibold text-card-foreground">
-                        23
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Последний вход:
-                      </span>
-                      <span className="font-semibold text-card-foreground">
-                        Сегодня
-                      </span>
-                    </div>
+                    {statsLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <span className="ml-2">Загрузка статистики...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Добавлено оборудования:
+                          </span>
+                          <span className="font-semibold text-card-foreground">
+                            {userStats?.equipment_added || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Создано договоров:
+                          </span>
+                          <span className="font-semibold text-card-foreground">
+                            {userStats?.contracts_created || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Общее количество действий:
+                          </span>
+                          <span className="font-semibold text-card-foreground">
+                            {userStats?.total_actions || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            Последний вход:
+                          </span>
+                          <span className="font-semibold text-card-foreground">
+                            {formatLastLogin(userProfile?.last_login)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </div>
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Password Change Modal */}
+        <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+          <DialogContent className="w-[40%]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Изменить пароль
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="oldPassword">Текущий пароль</Label>
+                <Input
+                  id="oldPassword"
+                  type="password"
+                  value={passwordData.old_password}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      old_password: e.target.value,
+                    })
+                  }
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Новый пароль</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordData.new_password}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      new_password: e.target.value,
+                    })
+                  }
+                  className="h-12"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">
+                  Подтвердите новый пароль
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwordData.confirm_password}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      confirm_password: e.target.value,
+                    })
+                  }
+                  className="h-12"
+                />
+              </div>
+              {passwordData.new_password &&
+                passwordData.confirm_password &&
+                passwordData.new_password !== passwordData.confirm_password && (
+                  <div className="text-sm text-red-600">
+                    Пароли не совпадают
+                  </div>
+                )}
+              {passwordData.new_password &&
+                passwordData.new_password.length < 8 && (
+                  <div className="text-sm text-red-600">
+                    Пароль должен содержать минимум 8 символов
+                  </div>
+                )}
+            </div>
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordData({
+                    old_password: "",
+                    new_password: "",
+                    confirm_password: "",
+                  });
+                }}
+                disabled={isChangingPassword}
+              >
+                Отменить
+              </Button>
+              <Button
+                onClick={handlePasswordChange}
+                disabled={
+                  !passwordData.old_password ||
+                  !passwordData.new_password ||
+                  !passwordData.confirm_password ||
+                  passwordData.new_password !== passwordData.confirm_password ||
+                  passwordData.new_password.length < 8 ||
+                  isChangingPassword
+                }
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    Изменение...
+                  </>
+                ) : (
+                  "Изменить пароль"
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

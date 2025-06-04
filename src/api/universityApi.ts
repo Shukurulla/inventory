@@ -501,19 +501,115 @@ export const universityApi = createApi({
     }),
 
     updateEquipmentStatus: builder.mutation<
-      void,
-      { equipmentId: number; status: string }
+      Tequipment,
+      { equipmentId: number; statusData: EquipmentStatusUpdate }
     >({
-      query: ({ equipmentId, status }) => ({
+      query: ({ equipmentId, statusData }) => ({
         url: `/inventory/equipment/${equipmentId}/`,
         method: "PATCH",
-        body: { status },
+        body: statusData,
       }),
       invalidatesTags: (result, error, { equipmentId }) => [
         { type: "Equipment", id: equipmentId.toString() },
         { type: "Equipment", id: "LIST" },
         { type: "Equipment", id: "MY_LIST" },
+        { type: "Inventory", id: "LIST" },
       ],
+    }),
+    updateSpecComputer: builder.mutation<
+      TCompSpecifications,
+      { id: number; data: Partial<TCompSpecifications> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/computer-specifications/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "COMPUTER" }],
+    }),
+
+    updateSpecProjector: builder.mutation<
+      ProjectorSpecs,
+      { id: number; data: Partial<ProjectorSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/projector-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "PROJECTOR" }],
+    }),
+
+    updatePrinterSpecs: builder.mutation<
+      PrinterSpecs,
+      { id: number; data: Partial<PrinterSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/printer-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "PRINTER" }],
+    }),
+
+    updateMonoblokSpecs: builder.mutation<
+      MonoblokSpecs,
+      { id: number; data: Partial<MonoblokSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/monoblok-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "MONOBLOCK" }],
+    }),
+
+    updateElectronicBoardSpecs: builder.mutation<
+      ElectronBoardSpecs,
+      { id: number; data: Partial<ElectronBoardSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/whiteboard-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "WHITEBOARD" }],
+    }),
+
+    updateTvSpecs: builder.mutation<
+      TVSpecs,
+      { id: number; data: Partial<TVSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/tv-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "TV" }],
+    }),
+
+    updateLaptopSpecs: builder.mutation<
+      LaptopSpecs,
+      { id: number; data: Partial<LaptopSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/notebook-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "LAPTOP" }],
+    }),
+
+    updateRouterSpecs: builder.mutation<
+      RouterSpecs,
+      { id: number; data: Partial<RouterSpecs> }
+    >({
+      query: ({ id, data }) => ({
+        url: `inventory/router-specification/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Specifications", id: "ROUTER" }],
     }),
 
     bulkUpdateEquipmentStatuses: builder.mutation<
@@ -677,7 +773,14 @@ export const {
   useBulkUpdateInnMutation,
   useUpdateEquipmentStatusMutation,
   useBulkUpdateEquipmentStatusesMutation,
-
+  useUpdateSpecComputerMutation,
+  useUpdateSpecProjectorMutation,
+  useUpdatePrinterSpecsMutation,
+  useUpdateMonoblokSpecsMutation,
+  useUpdateElectronicBoardSpecsMutation,
+  useUpdateTvSpecsMutation,
+  useUpdateLaptopSpecsMutation,
+  useUpdateRouterSpecsMutation,
   // Equipment actions
   useMoveEquipmentsMutation,
   useSendToRepairMutation,

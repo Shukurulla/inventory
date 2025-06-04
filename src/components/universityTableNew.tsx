@@ -1,7 +1,8 @@
+// src/components/universityTableNew.tsx - Updated without + button
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import CustomAccordion from "./CustomAccordion";
-import { Plus, ChevronRight, Edit, Trash2 } from "lucide-react";
+import { ChevronRight, Edit, Trash2 } from "lucide-react";
 import HomeIcon from "@/assets/Icons/HomeIcon";
 import FacultyIcon from "@/assets/Icons/Faculty";
 import RoomIcon from "@/assets/Icons/RoomIcon";
@@ -15,7 +16,6 @@ import LaptopIcon from "@/assets/Icons/LaptopIcon";
 import PrinterIcon from "@/assets/Icons/PrinterIcon";
 import RouterIcon from "@/assets/Icons/RouterIcon";
 import GogglesIcon from "@/assets/Icons/GogglesIcon";
-import { InventoryModal } from "./InventoryModal";
 import IconLabel from "./ReusableIcon";
 import AccordionSkeleton from "./Skeletons/AccordionSkeleton";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,13 +28,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { toast } from "react-toastify";
 import { errorValidatingWithToast } from "@/utils/ErrorValidation";
 import { CircleIcon } from "lucide-react";
@@ -89,7 +82,6 @@ export function UniversityTable() {
     room?: number;
   }>({});
 
-  const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<Tequipment | null>(
@@ -152,8 +144,8 @@ export function UniversityTable() {
     enabled: !!selectedRoomId,
     refetchOnMount: "always",
     refetchOnWindowFocus: false,
-    // Polling every 10 seconds when modal is not open
-    refetchInterval: showModal ? false : 10000,
+    // Polling every 10 seconds
+    refetchInterval: 10000,
   });
 
   const handleSelect = (
@@ -190,21 +182,6 @@ export function UniversityTable() {
         faculty: openAccordions.faculty,
         room: id || undefined,
       });
-    }
-  };
-
-  // Handle modal close and refetch data
-  const handleModalClose = (open: boolean) => {
-    setShowModal(open);
-    if (!open) {
-      // Refetch data when modal closes to show new equipment
-      console.log("Modal closed, refetching equipment data...");
-      refetchEquipments();
-
-      // Also refetch blocks and rooms to get updated counts
-      setTimeout(() => {
-        refetchBlocks();
-      }, 1000);
     }
   };
 
@@ -371,32 +348,7 @@ export function UniversityTable() {
     }
   };
 
-  // Inventor qo'shish tugmasi komponenti
-  const AddInventoryButton = ({
-    level,
-    onClick,
-    className = "",
-  }: {
-    level: string;
-    onClick: () => void;
-    className?: string;
-  }) => (
-    <div
-      className={`p-4 border-t border-gray-100 dark:border-gray-700 ${className}`}
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
-        onClick={onClick}
-      >
-        <Plus className="h-4 w-4" />
-        Добавить инвентарь в {level}
-      </Button>
-    </div>
-  );
-
-  // Equipment type row - styled like Dobavleniya page
+  // Equipment type row - without + button
   const renderEquipmentTypeRow = (equipmentType: TEquipmnetTypesRoom) => {
     const matchedIcon = inventoryIcons.find(
       (icon) => icon.name === equipmentType.name
@@ -430,21 +382,7 @@ export function UniversityTable() {
                 {equipmentType.items?.length || 0}
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (selectedRoomId) {
-                    setShowModal(true);
-                  }
-                }}
-              >
-                <Plus className="h-5 w-5 text-blue-500" />
-              </Button>
-            </div>
+            {/* Removed + button from here */}
           </div>
         }
       >
@@ -470,8 +408,8 @@ export function UniversityTable() {
                       {item.name}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {getStatusText(item.status)} - ИНН:{" "}
-                      {item.uid || `ИНН-${item.id.toString().padStart(9, "0")}`}
+                      {getStatusText(item.status)} -
+                      {item.inn || `ИНН-${item.id.toString().padStart(9, "0")}`}
                     </span>
                   </div>
                 </div>
@@ -581,20 +519,7 @@ export function UniversityTable() {
               >
                 {floorsIsLoading && <AccordionSkeleton />}
                 {!floorsIsLoading && filteredFloors.length === 0 && (
-                  <>
-                    <p className="ml-3 text-gray-500 p-4">Пустая строка...</p>
-                    <AddInventoryButton
-                      level="блок"
-                      onClick={() => {
-                        if (selectedRoomId) {
-                          setShowModal(true);
-                        } else {
-                          toast.warning("Сначала выберите кабинет");
-                        }
-                      }}
-                      className="ml-3"
-                    />
-                  </>
+                  <p className="ml-3 text-gray-500 p-4">Пустая строка...</p>
                 )}
                 {!floorsIsLoading &&
                   filteredFloors.map((floor) => {
@@ -623,22 +548,9 @@ export function UniversityTable() {
                         {facultiesIsLoading && <AccordionSkeleton />}
                         {!facultiesIsLoading &&
                           filteredFaculties.length === 0 && (
-                            <>
-                              <p className="ml-3 text-gray-500 p-4">
-                                Пустая строка...
-                              </p>
-                              <AddInventoryButton
-                                level="этаж"
-                                onClick={() => {
-                                  if (selectedRoomId) {
-                                    setShowModal(true);
-                                  } else {
-                                    toast.warning("Сначала выберите кабинет");
-                                  }
-                                }}
-                                className="ml-3"
-                              />
-                            </>
+                            <p className="ml-3 text-gray-500 p-4">
+                              Пустая строка...
+                            </p>
                           )}
                         {!facultiesIsLoading &&
                           filteredFaculties.map((faculty) => {
@@ -670,24 +582,9 @@ export function UniversityTable() {
                                 {roomsIsLoading && <AccordionSkeleton />}
                                 {!roomsIsLoading &&
                                   facultyRooms.length === 0 && (
-                                    <>
-                                      <p className="ml-3 text-gray-500 p-4">
-                                        Пустая строка...
-                                      </p>
-                                      <AddInventoryButton
-                                        level="факультет"
-                                        onClick={() => {
-                                          if (selectedRoomId) {
-                                            setShowModal(true);
-                                          } else {
-                                            toast.warning(
-                                              "Сначала выберите кабинет"
-                                            );
-                                          }
-                                        }}
-                                        className="ml-3"
-                                      />
-                                    </>
+                                    <p className="ml-3 text-gray-500 p-4">
+                                      Пустая строка...
+                                    </p>
                                   )}
                                 {!roomsIsLoading &&
                                   facultyRooms.map((room) => {
@@ -728,25 +625,6 @@ export function UniversityTable() {
                                               оборудования
                                             </div>
                                           )}
-
-                                        {/* Always show add button if room is selected */}
-                                        {selectedRoomId === room.id &&
-                                          !equipmentsIsLoading && (
-                                            <div className="p-4 border-t border-gray-100 dark:border-gray-700 ml-3">
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setShowModal(true);
-                                                }}
-                                              >
-                                                <Plus className="h-4 w-4" />
-                                                Добавить новую технику
-                                              </Button>
-                                            </div>
-                                          )}
                                       </AccordionWrapper>
                                     );
                                   })}
@@ -760,13 +638,6 @@ export function UniversityTable() {
             );
           })}
       </div>
-
-      {/* Modals */}
-      <InventoryModal
-        open={showModal}
-        roomId={selectedRoomId}
-        onOpenChange={handleModalClose}
-      />
 
       {/* Edit Equipment Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
@@ -799,25 +670,6 @@ export function UniversityTable() {
                 }
                 className="mt-1"
               />
-            </div>
-            <div>
-              <Label htmlFor="edit-status">Статус</Label>
-              <Select
-                value={editFormData.status}
-                onValueChange={(value) =>
-                  setEditFormData({ ...editFormData, status: value })
-                }
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NEW">Новое</SelectItem>
-                  <SelectItem value="WORKING">Рабочее</SelectItem>
-                  <SelectItem value="NEEDS_REPAIR">Требуется ремонт</SelectItem>
-                  <SelectItem value="DISPOSED">Утилизировано</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex items-center space-x-2">
               <input
