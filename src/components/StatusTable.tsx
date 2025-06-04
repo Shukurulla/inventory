@@ -1,6 +1,10 @@
-// src/components/StatusTable.tsx - Simplified Version
+// src/components/StatusTable.tsx - Updated with delete-create edit system
 import { useState } from "react";
-import { useGetAddedEquipmentsQuery } from "@/api/universityApi";
+import {
+  useGetAddedEquipmentsQuery,
+  useBulkCreateEquipmentMutation,
+  useDeleteEquipmentsMutation,
+} from "@/api/universityApi";
 import { EQUIPMENT_TYPES } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/badge";
 import type { Tequipment } from "@/types";
 import { toast } from "react-toastify";
 import { errorValidatingWithToast } from "@/utils/ErrorValidation";
@@ -37,6 +42,8 @@ export function StatusTable() {
     error,
     refetch,
   } = useGetAddedEquipmentsQuery();
+  const [bulkCreate] = useBulkCreateEquipmentMutation();
+  const [deleteEquipments] = useDeleteEquipmentsMutation();
 
   // Group equipment by type
   const groupedEquipments = Object.entries(EQUIPMENT_TYPES)
@@ -44,8 +51,6 @@ export function StatusTable() {
       const items = allEquipments.filter(
         (item) => item.type === parseInt(typeId)
       );
-
-      // Count by status
       const statusCounts = items.reduce((acc, item) => {
         acc[item.status] = (acc[item.status] || 0) + 1;
         return acc;
@@ -109,55 +114,7 @@ export function StatusTable() {
     return equipmentStatuses[item.id] || item.status;
   };
 
-  // Equipment status update using PATCH
-  const updateEquipmentStatus = async (equipmentId: number, status: string) => {
-    const token = localStorage.getItem("accessToken");
-
-    const equipment = selectedEquipments.find((eq) => eq.id === equipmentId);
-    if (!equipment) {
-      throw new Error("Equipment not found");
-    }
-    console.log(equipment);
-
-    // Minimal request body based on Postman collection
-    const requestBody: any = {
-      ...equipment,
-      type: equipment.type,
-      status: status,
-    };
-    console.log(requestBody);
-
-    // Add disposal fields only if status is DISPOSED
-    if (status === "DISPOSED") {
-      requestBody.disposal_reason = "Status changed via status management";
-      requestBody.disposal_notes = "Equipment disposed through status update";
-    }
-
-    const response = await fetch(
-      `https://invenmaster.pythonanywhere.com/inventory/equipment/${equipmentId}/`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.error("API Error Response:", errorData);
-      throw new Error(
-        `HTTP ${response.status}: ${
-          JSON.stringify(errorData) || "Update failed"
-        }`
-      );
-    }
-
-    return response.json();
-  };
-
+  // New delete-create edit system
   const handleSave = async () => {
     if (Object.keys(equipmentStatuses).length === 0) {
       toast.info("Нет изменений для сохранения");
@@ -167,16 +124,64 @@ export function StatusTable() {
     setIsUpdating(true);
 
     try {
-      const updates = Object.entries(equipmentStatuses);
+      const changedEquipments = selectedEquipments.filter(
+        (equipment) =>
+          equipmentStatuses[equipment.id] &&
+          equipmentStatuses[equipment.id] !== equipment.status
+      );
+
       let successCount = 0;
       let errorCount = 0;
 
-      for (const [equipmentId, status] of updates) {
+      for (const equipment of changedEquipments) {
         try {
-          await updateEquipmentStatus(parseInt(equipmentId), status);
+          const newStatus = equipmentStatuses[equipment.id];
+
+          // Step 1: Create new equipment with updated status
+          const createPayload = {
+            type_id: equipment.type,
+            room_id: equipment.room,
+            description: equipment.description,
+            status: newStatus,
+            contract_id: equipment.contract,
+            count: 1,
+            name_prefix: equipment.name,
+            is_active: equipment.is_active,
+            computer_details: equipment.computer_details
+              ? JSON.parse(equipment.computer_details)
+              : null,
+            printer_char: equipment.printer_char
+              ? JSON.parse(equipment.printer_char)
+              : null,
+            projector_char: equipment.projector_char
+              ? JSON.parse(equipment.projector_char)
+              : null,
+            monoblok_char: equipment.monoblok_char
+              ? JSON.parse(equipment.monoblok_char)
+              : null,
+            whiteboard_char: equipment.whiteboard_char
+              ? JSON.parse(equipment.whiteboard_char)
+              : null,
+            tv_char: equipment.tv_char ? JSON.parse(equipment.tv_char) : null,
+            notebook_char: equipment.notebook_char
+              ? JSON.parse(equipment.notebook_char)
+              : null,
+            router_char: equipment.router_char
+              ? JSON.parse(equipment.router_char)
+              : null,
+            extender_char: equipment.extender_char
+              ? JSON.parse(equipment.extender_char)
+              : null,
+          };
+
+          await bulkCreate(createPayload).unwrap();
+
+          // Step 2: Delete old equipment
+          await deleteEquipments({ ids: [equipment.id] }).unwrap();
+
           successCount++;
         } catch (error) {
-          console.error(`Failed to update equipment ${equipmentId}:`, error);
+          console.error(`Failed to update equipment ${equipment.id}:`, error);
           errorCount++;
         }
       }
@@ -204,21 +209,21 @@ export function StatusTable() {
     if (item.inn && item.inn !== 0) {
       return item.inn.toString();
     }
-
     if (item.uid) {
       const numericINN = parseInt(item.uid);
       if (!isNaN(numericINN) && numericINN > 0) {
         return item.uid;
       }
-
       if (item.uid.includes("-")) {
         return `ИНН-${item.id.toString().padStart(9, "0")}`;
       }
-
       return item.uid;
     }
-
     return `ИНН-${item.id.toString().padStart(9, "0")}`;
+  };
+
+  const hasChanges = () => {
+    return Object.keys(equipmentStatuses).length > 0;
   };
 
   if (isLoading) {
@@ -285,7 +290,6 @@ export function StatusTable() {
                   </p>
                 </div>
               </div>
-
               <div className="flex space-x-2">
                 {Object.entries(group.statusCounts).map(([status, count]) => (
                   <span
@@ -326,7 +330,7 @@ export function StatusTable() {
           <div className="flex-1 overflow-y-auto space-y-2">
             {selectedEquipments.map((item) => {
               const currentStatus = getCurrentStatus(item);
-              const hasChanged =
+              const hasStatusChanged =
                 equipmentStatuses[item.id] &&
                 equipmentStatuses[item.id] !== item.status;
 
@@ -334,13 +338,20 @@ export function StatusTable() {
                 <div
                   key={item.id}
                   className={`grid grid-cols-4 gap-4 p-3 border rounded-lg transition-colors ${
-                    hasChanged
+                    hasStatusChanged
                       ? "border-blue-300 bg-blue-50 dark:bg-blue-900/20"
                       : "border-gray-200"
                   }`}
                 >
                   <div className="flex items-center">
-                    <span className="font-medium">{item.name}</span>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-300">
+                        {selectedType.charAt(0)}
+                      </span>
+                    </div>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {item.name}
+                    </span>
                   </div>
 
                   <div className="text-center">
@@ -350,16 +361,12 @@ export function StatusTable() {
                   </div>
 
                   <div className="text-center">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
-                        item.status
-                      )}`}
-                    >
+                    <Badge className={`${getStatusColor(item.status)} border`}>
                       {getStatusText(item.status)}
-                      {hasChanged && (
+                      {hasStatusChanged && (
                         <span className="ml-1 text-xs">(изменено)</span>
                       )}
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="flex items-center justify-center">
@@ -411,9 +418,7 @@ export function StatusTable() {
 
               <Button
                 onClick={handleSave}
-                disabled={
-                  Object.keys(equipmentStatuses).length === 0 || isUpdating
-                }
+                disabled={!hasChanges() || isUpdating}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white"
               >
                 {isUpdating ? "Сохранение..." : "Сохранить изменения"}
@@ -422,7 +427,7 @@ export function StatusTable() {
           </div>
 
           {/* Changes Summary */}
-          {Object.keys(equipmentStatuses).length > 0 && (
+          {hasChanges() && (
             <div className="flex-shrink-0 mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Изменения:</strong>{" "}

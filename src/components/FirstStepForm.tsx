@@ -1,4 +1,4 @@
-import { Download, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -139,14 +139,6 @@ export const StepOneForm = ({
             )}
           </SelectContent>
         </Select>
-      </div>
-
-      {/* QR-код + Скачать */}
-      <div className="flex flex-1 items-center justify-between gap-2">
-        <p className="text-lg font-medium text-accent-foreground">QR-код</p>
-        <Button variant="secondary" className="gap-1">
-          <Download size={16} /> Скачать
-        </Button>
       </div>
     </div>
   );
