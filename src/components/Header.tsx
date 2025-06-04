@@ -306,7 +306,7 @@ export const Header: React.FC<HeaderProps> = ({ title, children }) => {
                           {item.name}
                         </h3>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                          <span>ИНН: {item.uid}</span>
+                          <span>ИНН: {item.inn}</span>
                           <Badge
                             className={`${getStatusColor(
                               item.status
@@ -388,7 +388,7 @@ export const Header: React.FC<HeaderProps> = ({ title, children }) => {
                       ИНН:
                     </span>
                     <span className="ml-2 text-lg font-mono">
-                      {selectedEquipment.uid}
+                      {selectedEquipment.inn}
                     </span>
                   </div>
                   <div>
