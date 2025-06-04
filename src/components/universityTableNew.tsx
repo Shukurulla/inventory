@@ -97,11 +97,7 @@ export function UniversityTable() {
   });
 
   // React Query with refetchOnMount for real-time updates
-  const {
-    data: blocks = [],
-    isLoading: blocksIsLoading,
-    refetch: refetchBlocks,
-  } = useQuery({
+  const { data: blocks = [], isLoading: blocksIsLoading } = useQuery({
     queryKey: ["blocks", 1],
     queryFn: () => universityApi.getBlocks(1),
     refetchOnMount: "always",

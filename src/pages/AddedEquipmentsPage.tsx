@@ -7,13 +7,6 @@ import {
   useGetRoomsQuery,
   usePatchEquipmentMutation,
   useGetSpecComputerQuery,
-  useGetSpecProjectorQuery,
-  useGetPrinterSpecsQuery,
-  useGetMonoblokSpecsQuery,
-  useGetElectronicBoardSpecsQuery,
-  useGetTvSpecsQuery,
-  useGetLaptopSpecsQuery,
-  useGetRouterSpecsQuery,
 } from "@/api/universityApi";
 import DesktopIcon from "@/assets/Icons/DesktopIcon";
 import { Button } from "@/components/ui/button";
@@ -46,7 +39,7 @@ import {
   Upload,
   Plus,
 } from "lucide-react";
-import React, { useState, useEffect, type JSX } from "react";
+import React, { useState, type JSX } from "react";
 import { EQUIPMENT_TYPES } from "../types";
 import IconLabel from "@/components/ReusableIcon";
 import MonoblockIcon from "@/assets/Icons/MonoblockIcon";
@@ -145,13 +138,6 @@ const AddedEquipmentPage: React.FC = () => {
 
   // Specifications queries
   const { data: computerSpecs = [] } = useGetSpecComputerQuery();
-  const { data: projectorSpecs = [] } = useGetSpecProjectorQuery();
-  const { data: printerSpecs = [] } = useGetPrinterSpecsQuery();
-  const { data: monoblokSpecs = [] } = useGetMonoblokSpecsQuery();
-  const { data: electronBoardSpecs = [] } = useGetElectronicBoardSpecsQuery();
-  const { data: tvSpecs = [] } = useGetTvSpecsQuery();
-  const { data: laptopSpecs = [] } = useGetLaptopSpecsQuery();
-  const { data: routerSpecs = [] } = useGetRouterSpecsQuery();
 
   const [deleteEquipment, { isLoading: isDeleting }] =
     useDeleteEquipmentsMutation();

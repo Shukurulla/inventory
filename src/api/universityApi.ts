@@ -126,11 +126,6 @@ interface EquipmentFilterParams {
 }
 
 // Equipment Move Request Type
-interface MoveEquipmentRequest {
-  equipment_ids: number[];
-  to_room_id: number;
-  from_room_id?: number;
-}
 
 // Bulk Status Update Request Type
 interface BulkStatusUpdateRequest {
@@ -500,22 +495,6 @@ export const universityApi = createApi({
       ],
     }),
 
-    updateEquipmentStatus: builder.mutation<
-      Tequipment,
-      { equipmentId: number; statusData: EquipmentStatusUpdate }
-    >({
-      query: ({ equipmentId, statusData }) => ({
-        url: `/inventory/equipment/${equipmentId}/`,
-        method: "PATCH",
-        body: statusData,
-      }),
-      invalidatesTags: (result, error, { equipmentId }) => [
-        { type: "Equipment", id: equipmentId.toString() },
-        { type: "Equipment", id: "LIST" },
-        { type: "Equipment", id: "MY_LIST" },
-        { type: "Inventory", id: "LIST" },
-      ],
-    }),
     updateSpecComputer: builder.mutation<
       TCompSpecifications,
       { id: number; data: Partial<TCompSpecifications> }
@@ -628,29 +607,6 @@ export const universityApi = createApi({
     }),
 
     // Equipment movement
-    moveEquipments: builder.mutation<void, MoveEquipmentRequest>({
-      query: (body) => ({
-        url: `inventory/equipment/move-equipment/`,
-        method: "POST",
-        body,
-      }),
-      invalidatesTags: (result, error, { to_room_id, from_room_id }) => {
-        const tags = [
-          { type: "Equipment", id: "LIST" },
-          { type: "EquipmentByRoom", id: to_room_id.toString() },
-          { type: "EquipmentTypesRoom", id: to_room_id.toString() },
-        ];
-
-        if (from_room_id) {
-          tags.push(
-            { type: "EquipmentByRoom", id: from_room_id.toString() },
-            { type: "EquipmentTypesRoom", id: from_room_id.toString() }
-          );
-        }
-
-        return tags;
-      },
-    }),
 
     // Equipment deletion
     deleteEquipments: builder.mutation<void, { ids: number[] }>({
@@ -771,7 +727,6 @@ export const {
 
   // Bulk operations
   useBulkUpdateInnMutation,
-  useUpdateEquipmentStatusMutation,
   useBulkUpdateEquipmentStatusesMutation,
   useUpdateSpecComputerMutation,
   useUpdateSpecProjectorMutation,
@@ -782,7 +737,6 @@ export const {
   useUpdateLaptopSpecsMutation,
   useUpdateRouterSpecsMutation,
   // Equipment actions
-  useMoveEquipmentsMutation,
   useSendToRepairMutation,
   useDisposeEquipmentMutation,
   useScanQRCodeMutation,

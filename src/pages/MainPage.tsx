@@ -3,7 +3,6 @@ import { useState } from "react";
 import Layout from "@/components/layout";
 import { UniversityTable } from "@/components/universityTableNew";
 import { StatusTable } from "@/components/StatusTable";
-import AddedEquipmentPage from "@/pages/AddedEquipmentsPage";
 
 type TabType = "status" | "university" | "addeds";
 

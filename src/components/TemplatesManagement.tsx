@@ -402,16 +402,6 @@ export const TemplatesManagement = () => {
   const renderEditForm = () => {
     if (!selectedTemplate || !editFormData) return null;
 
-    const isUpdating =
-      isUpdatingComputer ||
-      isUpdatingProjector ||
-      isUpdatingPrinter ||
-      isUpdatingMonoblok ||
-      isUpdatingElectronBoard ||
-      isUpdatingTv ||
-      isUpdatingLaptop ||
-      isUpdatingRouter;
-
     switch (selectedTemplate.type) {
       case "Компьютер":
         return (

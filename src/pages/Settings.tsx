@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Edit, Upload, Trash2, Lock, Loader2, User } from "lucide-react";
+import { Edit, Upload, Trash2, Lock, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,8 +41,7 @@ const SettingsPage: React.FC = () => {
   const { data: userStats, isLoading: statsLoading } = useGetUserStatsQuery();
   const [updateProfile, { isLoading: isUpdating }] =
     useUpdateUserProfileMutation();
-  const [uploadPicture, { isLoading: isUploading }] =
-    useUploadProfilePictureMutation();
+  const [_, { isLoading: isUploading }] = useUploadProfilePictureMutation();
   const [deletePicture, { isLoading: isDeleting }] =
     useDeleteProfilePictureMutation();
   const [changePassword, { isLoading: isChangingPassword }] =
@@ -174,17 +173,6 @@ const SettingsPage: React.FC = () => {
       ...prev,
       [field]: value,
     }));
-  };
-
-  const handleProfilePictureUpload = async (file: File) => {
-    try {
-      await uploadPicture(file).unwrap();
-      toast.success("Фото профиля обновлено!");
-      await refetchProfile();
-    } catch (error) {
-      console.error("Error uploading picture:", error);
-      errorValidatingWithToast(error);
-    }
   };
 
   const handleProfilePictureDelete = async () => {
