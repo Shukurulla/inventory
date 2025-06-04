@@ -1,3 +1,4 @@
+import type React from "react";
 // src/types.ts - Fixed version with complete types
 export interface LoginRequest {
   username: string;
@@ -166,6 +167,7 @@ export interface createFormPropsType {
   onOpenChange?: (open: boolean) => void;
 }
 
+// Update TCompSpecifications to remove monitor_size
 export interface TCompSpecifications {
   id?: number;
   cpu: string;
@@ -173,7 +175,49 @@ export interface TCompSpecifications {
   storage: string;
   has_keyboard: boolean;
   has_mouse: boolean;
+  video_card?: string; // Add video card
+  disk_type?: "m2_ssd" | "sata_ssd" | "hdd"; // Add disk type
+}
+
+// Add Monitor specifications
+export interface MonitorSpecs {
+  id?: number;
+  model: string;
+  screen_size: number;
+  resolution: string;
+  panel_type: "ips" | "va" | "tn" | "oled";
+  refresh_rate: number;
+  ports: {
+    hdmi: boolean;
+    vga: boolean;
+    dvi: boolean;
+    displayport: boolean;
+  };
+}
+
+// Update other specs to include video card and disk type where applicable
+export interface MonoblokSpecs {
+  id?: number;
+  cpu: string;
+  ram: string;
+  storage: string;
+  has_keyboard: boolean;
+  has_mouse: boolean;
+  screen_size: string;
+  model: string;
+  touch_type: "infrared" | "capacitive";
+  video_card?: string;
+  disk_type?: "m2_ssd" | "sata_ssd" | "hdd";
+}
+
+export interface LaptopSpecs {
+  id?: number;
+  cpu: string;
+  ram: string;
+  storage: string;
   monitor_size: string;
+  video_card?: string;
+  disk_type?: "m2_ssd" | "sata_ssd" | "hdd";
 }
 
 export interface charCompType {
@@ -203,18 +247,6 @@ export interface ProjectorSpecs {
   throw_type: string;
 }
 
-export interface MonoblokSpecs {
-  id?: number;
-  cpu: string;
-  ram: string;
-  storage: string;
-  has_keyboard: boolean;
-  has_mouse: boolean;
-  screen_size: string;
-  model: string;
-  touch_type: "infrared" | "capacitive";
-}
-
 export interface TVSpecs {
   id?: number;
   screen_size: number | null;
@@ -226,14 +258,6 @@ export interface PrinterSpecs {
   model: string;
   color: boolean;
   duplex: boolean;
-}
-
-export interface LaptopSpecs {
-  id?: number;
-  cpu: string;
-  ram: string;
-  storage: string;
-  monitor_size: string;
 }
 
 export interface ElectronBoardSpecs {
@@ -258,22 +282,26 @@ export type EquipmentSpecs =
   | PrinterSpecs
   | LaptopSpecs
   | ElectronBoardSpecs
-  | RouterSpecs;
+  | RouterSpecs
+  | MonitorSpecs;
 
 export const EQUIPMENT_TYPES: Record<number, string> = {
-  1: "Проектор",
   2: "Компьютер",
-  3: "Принтер",
   4: "Моноблок",
+  3: "Принтер",
+  1: "Проектор",
   5: "Электронная доска",
   6: "Телевизор",
   7: "Ноутбук",
   8: "Роутер",
+  9: "Монитор",
+  10: "Удлинитель",
 };
 
+// Update createEquipmentBodyType to include monitor
 export interface createEquipmentBodyType {
-  type_id: number; // Required field
-  room_id: number; // Required field
+  type_id: number;
+  room_id: number;
   description: string;
   photo?: File;
   is_active: boolean;
@@ -283,7 +311,7 @@ export interface createEquipmentBodyType {
   count: number;
   name_prefix: string;
 
-  // Specifications objects
+  // Add monitor specifications
   computer_details: TCompSpecifications | null;
   printer_char: PrinterSpecs | null;
   extender_char: any | null;
@@ -293,8 +321,9 @@ export interface createEquipmentBodyType {
   monoblok_char: MonoblokSpecs | null;
   projector_char: ProjectorSpecs | null;
   whiteboard_char: ElectronBoardSpecs | null;
+  monitor_char: MonitorSpecs | null; // Add this
 
-  // Specification IDs
+  // Add monitor specification ID
   computer_specification_id: number | null;
   printer_specification_id: number | null;
   extender_specification_id: number | null;
@@ -304,4 +333,5 @@ export interface createEquipmentBodyType {
   monoblok_specification_id: number | null;
   projector_specification_id: number | null;
   whiteboard_specification_id: number | null;
+  monitor_specification_id: number | null; // Add this
 }

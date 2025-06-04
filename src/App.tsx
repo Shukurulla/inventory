@@ -1,4 +1,4 @@
-import './App.css'
+
 import { ToastContainer } from 'react-toastify';
 import LocationTracker from './components/LocationTracker';
 import AppRoutes from './Routes/AppRoutes';

@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { type createEquipmentBodyType } from "@/types";
-import { DesktopForm } from "./DeskTopForm";
+import type { createEquipmentBodyType } from "@/types";
+import DesktopForm from "./DeskTopForm";
 import { ProjectorAddForm } from "./AddProjectorForm";
 import { PrinterForm } from "./PrinterForm";
 import { MonoBlokForm } from "./MonoblokForm";
@@ -21,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { MonitorForm } from "./MonitorForm";
 
 type StepFormProps = {
   stepFormData: {
@@ -395,7 +398,14 @@ const CharForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
           />
         );
       case "Монитор":
-        return renderMonitorForm();
+        return (
+          <MonitorForm
+            onOpenChange={onOpenChange}
+            create={true}
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+          />
+        );
       case "Удлинитель":
         return renderExtensionForm();
       default:

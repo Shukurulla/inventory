@@ -1,7 +1,9 @@
-// src/pages/MainPage.tsx - University tabiga Inventory modal qo'shilgan
+"use client";
+
+// src/pages/MainPage.tsx - Remove Characteristics tab
 import { useState } from "react";
 import Layout from "@/components/layout";
-import { UniversityTable } from "@/components/universityTableNew";
+import { UniversityTable } from "@/components/UniversityTable";
 import { StatusTable } from "@/components/StatusTable";
 import { InventoryModal } from "@/components/InventoryModal";
 

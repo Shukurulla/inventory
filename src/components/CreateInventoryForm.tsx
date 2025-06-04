@@ -1,3 +1,5 @@
+"use client";
+
 // src/components/CreateInventoryForm.tsx - Fixed version
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,7 @@ import {
 import { toast } from "react-toastify";
 import { StepOneForm } from "./FirstStepForm";
 import AddInnForm from "./AddInnForm";
-import { DesktopForm } from "./DeskTopForm";
+import DesktopForm from "./DeskTopForm";
 import { ProjectorAddForm } from "./AddProjectorForm";
 import { PrinterForm } from "./PrinterForm";
 import { MonoBlokForm } from "./MonoblokForm";
@@ -21,6 +23,7 @@ import { ElectronBoardForm } from "./ElectronicBoardForm";
 import { TvForm } from "./TvForm";
 import { LaptopForm } from "./LaptopForm";
 import { RouterForm } from "./RouterForm";
+import { MonitorForm } from "./MonitorForm";
 
 type StepFormProps = {
   stepFormData: {
@@ -91,7 +94,7 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
           contract_id: equipmentFormData.contract_id,
           count: equipmentFormData.count,
           name_prefix: equipmentFormData.name_prefix,
-          is_active: equipmentFormData.is_active,
+          is_active: true, // Always set to true since we removed the checkbox
         };
 
         // Add equipment-specific specifications
@@ -193,9 +196,8 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
 
         // Close modal and reset form
         onOpenChange(false);
-
-        // Force page refresh to see changes immediately
-        window.location.reload();
+        // Instead of page reload, trigger a refetch of the data
+        // This will be handled by React Query's refetchOnMount
       } catch (err) {
         console.error("Failed to update INN:", err);
         toast.error("Ошибка при обновлении ИНН");
@@ -271,6 +273,13 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
             setEquipmentFormData={setEquipmentFormData}
           />
         );
+      case "Монитор":
+        return (
+          <MonitorForm
+            equipmentFormData={equipmentFormData}
+            setEquipmentFormData={setEquipmentFormData}
+          />
+        );
       default:
         return (
           <div>Форма для типа оборудования "{equipmentType}" не найдена</div>
@@ -283,7 +292,8 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
     return (
       equipmentFormData.name_prefix &&
       equipmentFormData.status &&
-      equipmentFormData.name
+      equipmentFormData.name &&
+      equipmentFormData.contract_id // Contract is now required
     );
   };
 
