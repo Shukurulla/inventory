@@ -162,7 +162,7 @@ const Addeds: React.FC = () => {
           <SelectContent>
             <SelectItem value="-">Блок</SelectItem>
             {blocks.map((block: TBlock) => (
-              <SelectItem key={block.id} value={block.id.toString()}>
+              <SelectItem key={block.id} value={block.id?.toString()}>
                 {block.name}
               </SelectItem>
             ))}
@@ -179,7 +179,7 @@ const Addeds: React.FC = () => {
           <SelectContent>
             <SelectItem value="-">Номер</SelectItem>
             {rooms.map((room: TRoom) => (
-              <SelectItem key={room.id} value={room.id.toString()}>
+              <SelectItem key={room.id} value={room?.id?.toString()}>
                 {room.name}
               </SelectItem>
             ))}
