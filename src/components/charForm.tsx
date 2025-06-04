@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EQUIPMENT_TYPES, type createEquipmentBodyType } from "@/types";
+import { type createEquipmentBodyType } from "@/types";
 import { DesktopForm } from "./DeskTopForm";
 import { ProjectorAddForm } from "./AddProjectorForm";
 import { PrinterForm } from "./PrinterForm";
@@ -402,7 +402,6 @@ const CharForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
         return renderDefaultForm();
     }
   };
-
   return (
     <Dialog open={true} onOpenChange={onOpenChange}>
       <DialogContent className="w-3/4 max-h-[90vh] overflow-y-auto">

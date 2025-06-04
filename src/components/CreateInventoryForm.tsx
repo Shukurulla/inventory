@@ -82,30 +82,86 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
       try {
         console.log("Submitting equipment data:", equipmentFormData);
 
-        // Create FormData for file upload
-        const formData = new FormData();
+        // Create the proper request body according to BulkCreateEquipmentRequest interface
+        const requestBody: any = {
+          type_id: equipmentFormData.type_id,
+          room_id: equipmentFormData.room_id,
+          description: equipmentFormData.description,
+          status: equipmentFormData.status,
+          contract_id: equipmentFormData.contract_id,
+          count: equipmentFormData.count,
+          name_prefix: equipmentFormData.name_prefix,
+          is_active: equipmentFormData.is_active,
+        };
 
-        // Add all fields to FormData
-        Object.entries(equipmentFormData).forEach(([key, value]) => {
-          if (value !== null && value !== undefined) {
-            if (key === "photo" && value instanceof File) {
-              formData.append(key, value);
-            } else if (typeof value === "object") {
-              // For object fields like computer_details, send as JSON string
-              formData.append(key, JSON.stringify(value));
-            } else {
-              formData.append(key, String(value));
-            }
-          }
-        });
-
-        // Log FormData contents for debugging
-        console.log("FormData contents:");
-        for (const [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
+        // Add equipment-specific specifications
+        if (equipmentFormData.computer_details) {
+          requestBody.computer_details = equipmentFormData.computer_details;
+        }
+        if (equipmentFormData.computer_specification_id) {
+          requestBody.computer_specification_id =
+            equipmentFormData.computer_specification_id;
+        }
+        if (equipmentFormData.projector_char) {
+          requestBody.projector_char = equipmentFormData.projector_char;
+        }
+        if (equipmentFormData.projector_specification_id) {
+          requestBody.projector_specification_id =
+            equipmentFormData.projector_specification_id;
+        }
+        if (equipmentFormData.printer_char) {
+          requestBody.printer_char = equipmentFormData.printer_char;
+        }
+        if (equipmentFormData.printer_specification_id) {
+          requestBody.printer_specification_id =
+            equipmentFormData.printer_specification_id;
+        }
+        if (equipmentFormData.monoblok_char) {
+          requestBody.monoblok_char = equipmentFormData.monoblok_char;
+        }
+        if (equipmentFormData.monoblok_specification_id) {
+          requestBody.monoblok_specification_id =
+            equipmentFormData.monoblok_specification_id;
+        }
+        if (equipmentFormData.whiteboard_char) {
+          requestBody.whiteboard_char = equipmentFormData.whiteboard_char;
+        }
+        if (equipmentFormData.whiteboard_specification_id) {
+          requestBody.whiteboard_specification_id =
+            equipmentFormData.whiteboard_specification_id;
+        }
+        if (equipmentFormData.tv_char) {
+          requestBody.tv_char = equipmentFormData.tv_char;
+        }
+        if (equipmentFormData.tv_specification_id) {
+          requestBody.tv_specification_id =
+            equipmentFormData.tv_specification_id;
+        }
+        if (equipmentFormData.notebook_char) {
+          requestBody.notebook_char = equipmentFormData.notebook_char;
+        }
+        if (equipmentFormData.notebook_specification_id) {
+          requestBody.notebook_specification_id =
+            equipmentFormData.notebook_specification_id;
+        }
+        if (equipmentFormData.router_char) {
+          requestBody.router_char = equipmentFormData.router_char;
+        }
+        if (equipmentFormData.router_specification_id) {
+          requestBody.router_specification_id =
+            equipmentFormData.router_specification_id;
+        }
+        if (equipmentFormData.extender_char) {
+          requestBody.extender_char = equipmentFormData.extender_char;
+        }
+        if (equipmentFormData.extender_specification_id) {
+          requestBody.extender_specification_id =
+            equipmentFormData.extender_specification_id;
         }
 
-        const response = await bulkCreate(formData).unwrap();
+        console.log("Request body:", requestBody);
+
+        const response = await bulkCreate(requestBody).unwrap();
         console.log("Bulk create response:", response);
 
         // Create INN form data from response
@@ -336,8 +392,6 @@ const StepForm = ({ stepFormData, onOpenChange }: StepFormProps) => {
           {isLoading ? "Загрузка..." : step === 3 ? "Завершить" : "Далее"}
         </Button>
       </div>
-
-      {/* Debug info */}
     </div>
   );
 };
